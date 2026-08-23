@@ -29,7 +29,7 @@ from setup_engine import build_setups
 from sr_engine import build_zones
 from technical_engine import build_technical_snapshot
 
-st.set_page_config(page_title="Stock Analyzer V6.0.8", page_icon="📈", layout="wide")
+st.set_page_config(page_title="Stock Analyzer V6.0.9", page_icon="📈", layout="wide")
 
 DB_FILE = Path(os.getenv("ANALYZER_DB_FILE", ".data/stock_analyzer_v6.sqlite"))
 HISTORY = SQLiteHistoryStore(DB_FILE)
@@ -1076,7 +1076,7 @@ def render_analysis(a: dict, symbol: str):
     inf,tech,market,company,risk,setups,opp = a["info"],a["tech"],a["market"],a["company"],a["risk"],a["setups"],a["opportunity"]
     name=inf.get("longName") or inf.get("shortName") or symbol
     st.header(f"{name} · {symbol}")
-    st.caption(f"V6.0.8 종합분석 · 데이터 기준 {pd.Timestamp(a['frame'].index[-1]).date()} · {a['region']} Market · Sector {a['sector'] or 'N/A'}")
+    st.caption(f"V6.0.9 종합분석 · 데이터 기준 {pd.Timestamp(a['frame'].index[-1]).date()} · {a['region']} Market · Sector {a['sector'] or 'N/A'}")
 
     st.subheader("종합 판단 요약")
     entry_view = entry_decision_view(setups)
@@ -1495,14 +1495,25 @@ def _safe_num(row, key: str, default=np.nan):
         return default
 
 
+def _validation_sample_confidence(n: int) -> tuple[str, str, str]:
+    """Readable sample-size guide for 20D non-overlapping validation cases."""
+    if n < 5:
+        return "매우 제한적", "status-red", "검증 사례가 적어 결과 변동성이 큽니다. 참고 수준으로만 보세요."
+    if n < 10:
+        return "제한적", "status-orange", "방향성은 참고할 수 있지만 몇 사례의 영향이 크게 남을 수 있습니다."
+    if n < 15:
+        return "참고 가능", "status-yellow", "반복되는 경향을 보기 시작할 수 있으나 시장 국면 차이를 함께 확인해야 합니다."
+    return "비교적 충분", "status-green", "현재 검증창의 20D 비중복 기준에서는 비교적 많은 사례가 확보됐습니다. 그래도 미래 확률로 해석하지 않습니다."
+
+
 def _calibration_style(summary: pd.DataFrame) -> tuple[str, str, str]:
     """Simple, explainable comparison of the two historical entry styles."""
     p, m = _cal_row(summary, "Pullback"), _cal_row(summary, "Momentum")
     if p is None or m is None:
         return "❔ 판단 자료 부족", "status-muted", "두 진입 방식의 과거 자료가 모두 확보되지 않아 성향을 비교하기 어렵습니다."
-    p_n, m_n = int(p.get("Independent", 0)), int(m.get("Independent", 0))
+    p_n, m_n = int(p.get("Validation 20D", 0)), int(m.get("Validation 20D", 0))
     if p_n < 5 and m_n < 5:
-        return "❔ 판단 자료 부족", "status-muted", "독립 사례가 적어 눌림목형·모멘텀형을 구분하기에는 아직 표본이 부족합니다."
+        return "❔ 판단 자료 부족", "status-muted", "20D 검증 사례가 적어 눌림목형·모멘텀형을 구분하기에는 아직 표본이 부족합니다."
 
     p_points = m_points = 0
     p_med, m_med = _safe_num(p, "Median 20D"), _safe_num(m, "Median 20D")
@@ -1524,18 +1535,22 @@ def _calibration_style(summary: pd.DataFrame) -> tuple[str, str, str]:
         return "🚀 모멘텀형", "status-green", "이 검증기간에서는 조정을 오래 기다리기보다 강한 돌파·추세를 따라가는 모멘텀 접근이 상대적으로 더 좋은 결과를 보였습니다."
     if p_n >= 5 and m_n >= 5:
         return "⚖️ 혼합형", "status-blue", "두 진입 방식 모두 의미 있는 과거 사례가 있으며 어느 한쪽이 뚜렷하게 우월하다고 보기 어렵습니다. 현재 Setup의 완성도와 Risk를 함께 보는 편이 좋습니다."
-    return "❔ 자료 제한", "status-muted", "한쪽 진입 방식의 독립 사례가 부족해 종목의 Entry 성향을 단정하기 어렵습니다. 충분한 사례가 있는 쪽은 참고자료로만 활용하세요."
+    return "❔ 자료 제한", "status-muted", "한쪽 진입 방식의 20D 검증 사례가 부족해 종목의 Entry 성향을 단정하기 어렵습니다. 충분한 사례가 있는 쪽은 참고자료로만 활용하세요."
 
 
 def _strategy_validation_text(row, setup: str) -> tuple[str, str]:
     ko = "눌림목 진입" if setup == "Pullback" else "모멘텀 진입"
-    if row is None or int(row.get("Independent", 0)) == 0:
-        return "자료 부족", f"검증 기준 이상인 {ko} 독립 사례가 없어 과거 성과를 해석하기 어렵습니다."
-    n = int(row.get("Independent", 0))
+    if row is None or int(row.get("Validation 20D", 0)) == 0:
+        return "자료 부족", f"검증 기준 이상인 {ko}의 20D 비중복 검증 사례가 없어 과거 성과를 해석하기 어렵습니다."
+
+    n = int(row.get("Validation 20D", 0))
+    episodes = int(row.get("Episodes", 0))
     hit = _safe_num(row, "Hit 20D")
     med = _safe_num(row, "Median 20D")
     avg = _safe_num(row, "Avg 20D")
     mdd = _safe_num(row, "Avg MDD20")
+    conf, _, conf_note = _validation_sample_confidence(n)
+
     if n < 5:
         tone = "자료 제한"
     elif np.isfinite(hit) and np.isfinite(med) and hit >= 70 and med > 0:
@@ -1545,9 +1560,9 @@ def _strategy_validation_text(row, setup: str) -> tuple[str, str]:
     else:
         tone = "과거 결과 혼조"
 
-    parts = [f"독립 사례 {n}회를 기준으로 봅니다."]
+    parts = [f"Setup 구간은 {episodes}회였고, 20영업일 성과가 서로 지나치게 겹치지 않도록 최소 20거래일 간격으로 추린 검증 사례 {n}회를 기준으로 봅니다."]
     if np.isfinite(hit):
-        parts.append(f"20영업일 뒤 상승한 사례 비율은 {hit:.0f}%였습니다.")
+        parts.append(f"이 중 20영업일 뒤 상승한 사례 비율은 {hit:.0f}%였습니다.")
     if np.isfinite(med) and np.isfinite(avg):
         gap = abs(avg - med)
         parts.append(f"대표 수익률(중앙값)은 {med:+.1f}%, 평균 수익률은 {avg:+.1f}%였습니다.")
@@ -1557,8 +1572,7 @@ def _strategy_validation_text(row, setup: str) -> tuple[str, str]:
             parts.append("평균과 대표 수익률이 크게 벌어지지 않아 결과가 특정 한두 사례에만 치우친 정도는 상대적으로 작습니다.")
     if np.isfinite(mdd):
         parts.append(f"진입 후 20영업일 동안의 평균 최대 하락폭은 {mdd:.1f}%였습니다.")
-    if n < 5:
-        parts.append("다만 독립 사례가 5회 미만이라 통계적 신뢰도는 낮게 봐야 합니다.")
+    parts.append(f"표본 신뢰도는 '{conf}'입니다. {conf_note}")
     return tone, " ".join(parts)
 
 
@@ -1566,12 +1580,12 @@ def _historical_alignment(setup_name: str, current_score: float, threshold: int,
     ko = "눌림목" if setup_name == "Pullback" else "모멘텀"
     if current_score < threshold:
         return "아직 확인 필요", "status-yellow", f"현재 {ko} 진입 점수 {current_score:.1f}점은 과거 검증 사례 포함 기준 {threshold}점보다 낮습니다. 현재 방식이 상대적으로 더 나을 수는 있지만, 아직 '강한 과거 Setup'과 같은 강도까지 올라온 것은 아닙니다."
-    if row is None or int(row.get("Independent", 0)) < 5:
-        return "자료 제한", "status-muted", f"현재 {ko} 진입 점수는 {threshold}점 이상이지만 과거 독립 사례가 충분하지 않아 정합성을 강하게 판단하기 어렵습니다."
+    if row is None or int(row.get("Validation 20D", 0)) < 5:
+        return "자료 제한", "status-muted", f"현재 {ko} 진입 점수는 {threshold}점 이상이지만 과거 20D 검증 사례가 충분하지 않아 정합성을 강하게 판단하기 어렵습니다."
     hit = _safe_num(row, "Hit 20D")
     med = _safe_num(row, "Median 20D")
     if np.isfinite(hit) and np.isfinite(med) and hit >= 65 and med > 0:
-        return "높음", "status-green", f"현재 {ko} 진입 점수 {current_score:.1f}점은 검증 기준을 충족하며, 과거 같은 기준 이상의 독립 사례도 대체로 우호적인 결과를 보였습니다. 현재 신호와 과거 패턴의 정합성이 높은 편입니다."
+        return "높음", "status-green", f"현재 {ko} 진입 점수 {current_score:.1f}점은 검증 기준을 충족하며, 과거 같은 기준 이상의 20D 비중복 검증 사례도 대체로 우호적인 결과를 보였습니다. 현재 신호와 과거 패턴의 정합성이 높은 편입니다."
     if np.isfinite(med) and med > 0:
         return "보통", "status-teal", f"현재 {ko} 진입 점수는 검증 기준을 충족합니다. 과거 결과도 평균적으로는 긍정적이었지만 일관성이 아주 높다고 보기는 어려워 Risk와 현재 시장환경을 함께 확인하는 편이 좋습니다."
     return "낮음", "status-orange", f"현재 {ko} 진입 점수 자체는 검증 기준을 충족하지만, 과거 같은 강도의 신호 이후 결과는 일관적이지 않았습니다. 현재 점수만으로 추격하거나 과신하기보다 진입 비중과 무효화 조건을 보수적으로 보는 편이 좋습니다."
@@ -1646,7 +1660,7 @@ def render_calibration(a: dict, symbol: str):
         """)
 
     run = st.button("과거 진입 검증 실행", type="primary")
-    cache_key = f"calibration_result_{symbol}_{threshold}"
+    cache_key = f"calibration_result_v609_{symbol}_{threshold}"
     if run:
         try:
             with st.spinner("과거 각 거래일의 눌림목·모멘텀 Setup을 재구성하는 중입니다..."):
@@ -1666,7 +1680,16 @@ def render_calibration(a: dict, symbol: str):
         return
 
     if not detail.empty:
-        st.caption(f"검증 구간 · {detail['date'].iloc[0]} ~ {detail['date'].iloc[-1]} · 공통 기준 {threshold}점 · 이후 성과 통계는 중복 신호를 줄인 독립 사례 기준")
+        st.caption(f"검증 신호 평가 구간 · {detail['date'].iloc[0]} ~ {detail['date'].iloc[-1]} · 공통 기준 {threshold}점")
+        st.markdown(
+            f"<div class='cal-help'><b>이번 검증에서 사례를 세는 기준</b><br>"
+            f"① <b>기준 이상 거래일</b> · Entry 점수가 {threshold}점 이상인 모든 거래일<br>"
+            f"② <b>Setup 구간</b> · 같은 강한 신호가 이어지는 기간을 한 구간으로 묶습니다. 기준 아래 상태가 <b>3거래일 이상</b> 이어진 뒤 다시 {threshold}점 이상이 되면 새 구간으로 봅니다.<br>"
+            f"③ <b>20D 검증 사례</b> · 20영업일 뒤 성과가 서로 과도하게 겹치지 않도록 Setup 구간 시작일끼리 <b>최소 20거래일</b> 간격을 둡니다.<br>"
+            f"④ <b>성과 기준</b> · 구간 시작일 종가 대비 5·10·20·60영업일 후 수익률과, 첫 20영업일 동안의 최대 하락폭을 봅니다.<br><br>"
+            f"<span class='v6-sub'>Entry 계산에는 각 과거 시점까지 최소 약 230거래일의 가격 이력을 확보하고, 최근 최대 420거래일 범위에서 검증합니다. 60영업일 이후 성과를 계산할 수 있도록 최신 약 60거래일은 새 검증 신호 후보에서 제외합니다.</span></div>",
+            unsafe_allow_html=True,
+        )
 
     st.markdown("<div class='v6-section'></div>", unsafe_allow_html=True)
     st.subheader("3. 이 종목의 과거 Entry 성향")
@@ -1688,13 +1711,16 @@ def render_calibration(a: dict, symbol: str):
             if row is None:
                 st.markdown(f"<div class='cal-strategy'><div class='v6-kicker'>{title}</div><div class='v6-sub'>검증 자료가 없습니다.</div></div>", unsafe_allow_html=True)
                 continue
-            n = int(row.get("Independent", 0))
+            n = int(row.get("Validation 20D", 0))
             pos = int(row.get("Positive 20D", 0))
+            episodes = int(row.get("Episodes", 0))
             hit = _safe_num(row, "Hit 20D")
             med = _safe_num(row, "Median 20D")
             avg = _safe_num(row, "Avg 20D")
             mdd = _safe_num(row, "Avg MDD20")
             tone, explanation = _strategy_validation_text(row, setup_name)
+            confidence, confidence_cls, _ = _validation_sample_confidence(n)
+            # Positive count and hit rate are generated from the same 20D validation cohort.
             hit_text = f"{pos} / {n} ({hit:.0f}%)" if n and np.isfinite(hit) else "—"
             med_text = f"{med:+.1f}%" if np.isfinite(med) else "—"
             avg_text = f"{avg:+.1f}%" if np.isfinite(avg) else "—"
@@ -1703,12 +1729,12 @@ def render_calibration(a: dict, symbol: str):
                 f"<div class='cal-strategy'><div class='v6-kicker'>{title}</div>"
                 f"<div style='font-weight:900;color:#f8fafc'>{tone}</div>"
                 f"<div class='cal-stat-grid'>"
-                f"<div class='cal-stat'><div class='k'>독립 사례</div><div class='v'>{n}회</div></div>"
+                f"<div class='cal-stat'><div class='k'>20D 검증 사례</div><div class='v'>{n}회</div></div>"
                 f"<div class='cal-stat'><div class='k'>20일 후 상승 사례</div><div class='v'>{hit_text}</div></div>"
                 f"<div class='cal-stat'><div class='k'>대표 수익률 · 20D Median</div><div class='v'>{med_text}</div></div>"
                 f"<div class='cal-stat'><div class='k'>평균 수익률 · 20D Average</div><div class='v'>{avg_text}</div></div>"
                 f"<div class='cal-stat'><div class='k'>평균 최대 하락폭 · MDD20</div><div class='v'>{mdd_text}</div></div>"
-                f"<div class='cal-stat'><div class='k'>기준 이상 거래일</div><div class='v'>{int(row.get('Signals', 0))}일</div></div>"
+                f"<div class='cal-stat'><div class='k'>Setup 구간</div><div class='v'>{episodes}회</div></div>"f"<div class='cal-stat'><div class='k'>기준 이상 거래일</div><div class='v'>{int(row.get('Signals', 0))}일</div></div>"f"<div class='cal-stat'><div class='k'>표본 신뢰도</div><div class='v {confidence_cls}'>{confidence}</div></div>"
                 f"</div><div class='v6-sub'>{explanation}</div></div>",
                 unsafe_allow_html=True,
             )
@@ -1750,7 +1776,8 @@ def render_calibration(a: dict, symbol: str):
         shown = summary.rename(columns={
             "Setup": "진입 방식",
             "Signals": "기준 이상 거래일",
-            "Independent": "독립 사례",
+            "Episodes": "Setup 구간",
+            "Validation 20D": "20D 검증 사례",
             "Positive 20D": "20일 후 상승 사례",
             "Hit 20D": "20일 후 상승 비율",
             "Median 20D": "대표 수익률 20D",
@@ -1761,6 +1788,12 @@ def render_calibration(a: dict, symbol: str):
             "Avg MDD20": "평균 최대 하락폭 20D",
         }).copy()
         shown["진입 방식"] = shown["진입 방식"].map({"Pullback": "눌림목 진입 (Pullback)", "Momentum": "모멘텀 진입 (Momentum)"}).fillna(shown["진입 방식"])
+        visible_cols = [
+            "진입 방식", "기준 이상 거래일", "Setup 구간", "20D 검증 사례", "20일 후 상승 사례",
+            "20일 후 상승 비율", "대표 수익률 20D", "평균 5D", "평균 10D", "평균 20D",
+            "평균 60D", "평균 최대 하락폭 20D",
+        ]
+        shown = shown[[c for c in visible_cols if c in shown.columns]]
         fmt = {
             "20일 후 상승 비율": "{:.1f}%",
             "대표 수익률 20D": "{:+.2f}%",
@@ -1773,14 +1806,16 @@ def render_calibration(a: dict, symbol: str):
         st.dataframe(shown.style.format(fmt, na_rep="—"), hide_index=True, use_container_width=True)
         st.markdown("""
 **쉽게 읽는 법**
-- **독립 사례**: 같은 눌림목이나 돌파가 며칠 연속 점수를 넘은 경우를 중복해서 세지 않도록 약 5영업일 간격으로 추린 사례입니다. 메인 해석은 이 독립 사례를 기준으로 계산합니다.
-- **20일 후 상승 비율**: 독립 사례 중 20영업일 뒤 주가가 신호 발생일보다 높았던 비율입니다. 미래 상승확률을 뜻하지 않습니다.
-- **대표 수익률 (Median)**: 독립 사례들의 수익률을 순서대로 세웠을 때 가운데 값입니다. 몇 번의 큰 급등·급락 영향이 적어 **'보통 사례가 어느 정도였는가'**를 볼 때 유용합니다.
-- **평균 수익률 (Average)**: 모든 독립 사례의 수익률을 더해 나눈 값입니다. 큰 급등 한두 번이 있으면 대표 수익률보다 높아질 수 있습니다.
+- **Setup 구간**: 기준점수 이상인 날이 이어지는 구간을 하나로 묶은 횟수입니다. 기준 아래 상태가 3거래일 이상 이어진 뒤 다시 기준 이상이 되면 새로운 구간으로 봅니다.
+- **20D 검증 사례**: 20영업일 성과 구간이 너무 겹치지 않도록 Setup 구간 시작일끼리 최소 20거래일 간격을 둔 사례입니다. 메인 20D 해석은 이 사례를 기준으로 계산합니다.
+- **20일 후 상승 비율**: 20D 검증 사례 중 20영업일 뒤 주가가 신호 시작일보다 높았던 비율입니다. 미래 상승확률을 뜻하지 않습니다.
+- **대표 수익률 (Median)**: 20D 검증 사례들의 수익률을 순서대로 세웠을 때 가운데 값입니다. 몇 번의 큰 급등·급락 영향이 적어 **'보통 사례가 어느 정도였는가'**를 볼 때 유용합니다.
+- **평균 수익률 (Average)**: 모든 20D 검증 사례의 수익률을 더해 나눈 값입니다. 큰 급등 한두 번이 있으면 대표 수익률보다 높아질 수 있습니다.
 - **평균 최대 하락폭 (MDD20)**: 진입 후 20영업일 동안 중간에 얼마나 크게 밀렸는지를 평균낸 값입니다. 0에 가까울수록 진입 후 흔들림이 작았다는 뜻입니다.
+- **평균 60D**: 같은 20D 검증 사례를 60영업일까지 추적한 보조 수치입니다. 사례 시작 간격은 20거래일이므로 60D 구간끼리는 일부 겹칠 수 있어 장기 참고값으로만 봅니다.
         """)
-        if (summary["Independent"] < 5).any():
-            st.warning("독립 사례가 5개 미만인 진입 방식이 있습니다. 해당 결과는 참고 수준으로만 보고 기준을 낮추거나 더 긴 데이터가 확보된 뒤 다시 비교하는 편이 좋습니다.")
+        if (summary["Validation 20D"] < 5).any():
+            st.warning("20D 검증 사례가 5개 미만인 진입 방식이 있습니다. 해당 결과는 참고 수준으로만 보고 기준을 낮추거나 더 긴 데이터가 확보된 뒤 다시 비교하는 편이 좋습니다.")
 
     with st.expander("과거 검증 원자료 보기"):
         st.dataframe(detail.tail(250), hide_index=True, use_container_width=True)
@@ -1791,7 +1826,7 @@ def render_calibration(a: dict, symbol: str):
 
 # -------------------- App shell --------------------
 st.title("Stock Analyzer by Kijungnam")
-st.caption("V6.0.8 · MULTI-LENS SETUP & DECISION SYSTEM · Decision Summary & Consensus")
+st.caption("V6.0.9 · MULTI-LENS SETUP & DECISION SYSTEM · Decision Summary & Consensus")
 
 with st.expander("🔥 V6 종목 스캐너 · 시장 전체 후보 찾기", expanded=False):
     render_scanner_section()
@@ -1816,7 +1851,7 @@ st.divider()
 analysis=None
 if symbol and mode in ("📊 종합분석","🎯 퀀트분석","🧩 옵션분석","🧪 과거 진입 검증"):
     try:
-        with st.spinner(f"{symbol} · V6.0.8 엔진을 계산하는 중입니다..."): analysis=build_full_analysis(symbol)
+        with st.spinner(f"{symbol} · V6.0.9 엔진을 계산하는 중입니다..."): analysis=build_full_analysis(symbol)
     except Exception as exc: st.error(f"분석을 계산하지 못했습니다: {exc}")
 
 if mode=="📊 종합분석":

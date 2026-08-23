@@ -1,3 +1,11 @@
+## V6.0.9
+- Reworked Calibration case counting into Setup Episodes and 20D validation cases.
+- A new Setup Episode requires at least 3 below-threshold trading rows before re-entry.
+- Primary 20D validation cases are spaced by at least 20 trading rows to reduce overlapping forward-return windows.
+- Fixed stale-cache risk that could show inconsistent positive-case counts and hit rates such as `0 / N (84%)`.
+- Added explicit validation-window, lookback, forward-buffer, case-counting, and sample-confidence explanations in the UI.
+- Replaced the ambiguous `Independent` label with `Setup 구간` and `20D 검증 사례`.
+
 ## V6.0.8
 - Adjusted Calibration strategy card layout to prevent text clipping by removing fixed card height and increasing stat box space.
 

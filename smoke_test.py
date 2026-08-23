@@ -71,7 +71,14 @@ def main():
 
     detail, summary = run_setup_calibration(frame, bench, threshold=60)
     assert not detail.empty
-    assert {"Signals","Independent","Median 20D"}.issubset(summary.columns)
+    assert {"Signals","Episodes","Validation 20D","Positive 20D","Median 20D"}.issubset(summary.columns)
+    for _, row in summary.iterrows():
+        n = int(row["Validation 20D"])
+        pos = int(row["Positive 20D"])
+        hit = row["Hit 20D"]
+        assert 0 <= pos <= n
+        if n > 0:
+            assert abs(float(hit) - (pos / n * 100)) < 1e-9
 
     with tempfile.TemporaryDirectory() as tmp:
         store=SQLiteHistoryStore(Path(tmp)/"history.sqlite")
