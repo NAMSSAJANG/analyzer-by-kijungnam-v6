@@ -1,65 +1,55 @@
-# Stock Analyzer V6.0
+# Stock Analyzer V6.0.1
 
-**Multi-Lens Setup & Decision System**
+**Multi-Lens Setup & Decision System · Explainability & UX Restoration**
 
-V6 rebuilds the V5-a0.1 stable base around a clearer decision architecture. The central change is that **stock quality, price leadership, entry setup, and risk are no longer collapsed into one score**.
+V6.0.1 keeps the V6 decision architecture while restoring the parts of V5 that made the app easier to read and interpret: AI briefing cards, detailed quantitative analysis, CAN SLIM, auxiliary quant indicators, Market Pulse, 10-trading-day score trajectories, scenario cards, and richer calibration explanations.
 
-## V6 decision architecture
+## Core V6 architecture
 
-1. **Company Quality V2**
-   - Growth, profitability, balance sheet, cash flow, valuation
-   - Missing fields are excluded instead of silently treated as bad data
-   - Data coverage / confidence is shown separately
-   - When a peer set is available, absolute scores are blended with peer-relative percentiles
+- **Opportunity Engine** — Company Quality 30%, Trend / Leadership 25%, Relative Strength 15%, Momentum / Demand 15%, Market Regime 15%.
+- **Entry Engine V3** — Pullback Entry and Momentum Entry are evaluated separately.
+- **Risk Engine** — Extension, Volatility, Earnings, Liquidity, and Market Risk are separated from Opportunity.
+- **US / KR Market Regime** — U.S. and Korean stocks use different market-context structures; Korean stocks also consider global drivers.
+- **Support / Resistance Zone Engine** — uses swing structure, EMAs, price clusters and available option walls.
+- **Consensus V2** — Company / Trend / Setup / Market / Options, with Signal Agreement and Data Confidence shown separately.
+- **SQLite History** — stores Opportunity, Trend, Momentum, Relative Strength, Pullback, Momentum Entry, Market, Risk and Preferred Setup.
+- **Calibration Engine** — price-only historical validation for Pullback / Momentum thresholds to avoid point-in-time fundamental leakage.
 
-2. **Opportunity Engine**
-   - Company Quality 30%
-   - Trend / Leadership 25%
-   - Relative Strength 15%
-   - Momentum / Demand 15%
-   - Market Regime 15%
-   - Risk is intentionally excluded from Opportunity and displayed separately
+## V6.0.1 UX / explainability restoration
 
-3. **Entry Engine V3**
-   - **Pullback Entry**: asks whether a strong stock has reset into a favorable support/EMA zone
-   - **Momentum Entry**: asks whether trend, breakout, volume, and relative strength justify following strength
-   - A stock can therefore be `NOT IN ZONE` for Pullback while still being `CONFIRMED` or `EXTENDED` for Momentum
+- Scanner removed from the individual-stock menu and moved to a separate market-wide Scanner section.
+- Individual analysis menu now includes **Overall Analysis / Quant Analysis / Options / Market / Calibration / History**.
+- Pullback and Momentum concepts are explained directly in the Entry section.
+- Internal English states are paired with user-facing Korean labels such as **진입 유리 / 진입 검토 / 관망 / 과열 주의 / 진입 보류**.
+- Entry, Risk and factor cards use more consistent spacing and minimum heights.
+- **AI overall / company / quant / entry / market-risk briefings** are restored on top of the V6 engine outputs.
+- **10-trading-day reconstructed charts** are restored for Opportunity / Entry and Quant / Trend / Momentum.
+- **Detailed Quant tab** restored: trend-volume chart, CAN SLIM, CAN SLIM reading guide, auxiliary quant indicators, technical indicators, financial indicators, peer comparison.
+- **Market Pulse** restored: S&P 500, Nasdaq 100, SOX, VIX, Gold, Silver, WTI, Copper, USD/KRW, DXY, Bitcoin and Ethereum, with short-term up/down changes.
+- Calibration now explains what the threshold changes, adds **Independent Signals, Median 20D, validation period, table-reading guide and summary interpretation**.
+- `.streamlit/config.toml` and `.gitignore` are included for deployment convenience.
 
-4. **Risk Engine**
-   - Extension, volatility, earnings/event risk, liquidity, market risk
-   - Produces a separate overall risk state and a starter-size multiplier
-   - High volatility no longer automatically makes a strong stock a low-quality stock
+## Important interpretation rules
 
-5. **US / KR Market Regime**
-   - US: broad market, growth/tech, sector, volatility, credit, dollar/liquidity
-   - KR: KOSPI/KOSDAQ, USD/KRW, global risk, US tech lead, global sector driver
-   - Korean stocks therefore use both local market context and relevant global drivers
+### Opportunity is not Entry
+A high Opportunity score means the stock is attractive across company quality, leadership, relative strength, momentum/demand and market context. It does **not** mean the current price is automatically a good entry.
 
-6. **Support / Resistance Zone Engine**
-   - Swing highs/lows, EMA20/50/200, prior breakouts, volume nodes, 52-week extremes
-   - Optional Put/Call Walls are included when U.S. options data is available
-   - Nearby levels are clustered into confluence **zones**, not treated as exact single-price lines
+### Pullback Entry
+Evaluates whether a strong stock has pulled back toward a constructive support / EMA zone. Low-volume pullbacks can be constructive.
 
-7. **Consensus V2**
-   - Company / Trend / Setup / Market / Options
-   - `Signal Agreement` and `Data Confidence` are separated
+### Momentum Entry
+Evaluates whether breakout strength, relative strength, trend and volume support following an active advance. A high RSI is not automatically treated as a negative when the broader momentum structure is strong.
 
-8. **V6 Scanner**
-   - Opportunity Leaders
-   - Momentum Setups
-   - Pullback Setups
-   - Scanner Opportunity is a price-based pre-screen for speed; full individual analysis adds Company Quality
+### Risk is separate
+Volatility and extension are primarily used for position-size / caution interpretation rather than automatically making a strong stock a weak stock.
 
-9. **History Database**
-   - SQLite by default via `.data/stock_analyzer_v6.sqlite`
-   - Stores Opportunity, Company, Trend, Momentum, Relative Strength, Pullback, Momentum Entry, Market, Risk, Preferred Setup
-   - JSON export/import is included
-   - On Streamlit Community Cloud, local disk may still reset on redeploy; set `ANALYZER_DB_FILE` to a durable mounted path or replace the isolated adapter with an external DB later
+## 10-day reconstructed charts
 
-10. **Calibration**
-   - Reconstructs historical Pullback / Momentum signals and evaluates 5D / 10D / 20D / 60D forward returns and 20D drawdown
-   - Fundamental data is deliberately excluded from V6.0 historical calibration to avoid point-in-time look-ahead bias
-   - Market Regime is neutral in the local calibration engine; a future version can inject historical regime snapshots
+The immediate 10-trading-day charts reconstruct price/volume/technical conditions for prior trading days while holding the **current Company Quality and current Market Regime** fixed. They are an explainability aid, not a point-in-time fundamental backtest. Actual daily saved records are stored separately in History.
+
+## Calibration caveat
+
+Calibration intentionally excludes historical fundamentals because Yahoo's current company information cannot reliably reproduce point-in-time historical fundamentals. Market Regime is held neutral in V6.0.1 local calibration. Therefore the calibration is specifically for **Entry Engine V3 price/setup behavior**, not a complete historical V6 portfolio backtest.
 
 ## Run locally
 
@@ -67,41 +57,49 @@ V6 rebuilds the V5-a0.1 stable base around a clearer decision architecture. The 
 python -m venv .venv
 # Windows
 .venv\Scripts\activate
-
 pip install -r requirements.txt
 streamlit run app.py
 ```
 
-## Optional history path
+## GitHub / Streamlit structure
 
-```bash
-# Windows PowerShell example
-$env:ANALYZER_DB_FILE="C:\\StockAnalyzerData\\v6.sqlite"
-streamlit run app.py
+```text
+stock-analyzer-v6/
+├─ .streamlit/
+│  └─ config.toml
+├─ .gitignore
+├─ app.py
+├─ calibration_engine.py
+├─ company_engine.py
+├─ consensus_engine.py
+├─ core_models.py
+├─ history_store.py
+├─ korean_stock_search.py
+├─ market_regime.py
+├─ opportunity_engine.py
+├─ options_analyzer.py
+├─ quant_engine.py
+├─ risk_engine.py
+├─ scanner_engine.py
+├─ scoring_utils.py
+├─ setup_engine.py
+├─ sitecustomize.py
+├─ smoke_test.py
+├─ sr_engine.py
+├─ technical_engine.py
+├─ requirements.txt
+├─ CHANGELOG.md
+└─ README.md
 ```
 
-## Main files
+## Offline validation
 
-- `app.py` — Streamlit UI and orchestration
-- `company_engine.py` — Company Quality V2 and peer-relative scoring
-- `technical_engine.py` — Trend, momentum, demand, relative strength metrics
-- `market_regime.py` — US/KR market context
-- `opportunity_engine.py` — Stock Opportunity score
-- `sr_engine.py` — confluence support/resistance zones
-- `setup_engine.py` — Pullback / Momentum Entry Engine V3
-- `risk_engine.py` — separate risk state
-- `consensus_engine.py` — independent-lens consensus
-- `scanner_engine.py` — Opportunity/Momentum/Pullback scanner
-- `history_store.py` — SQLite score trajectory
-- `calibration_engine.py` — price-only historical setup validation
-- `options_analyzer.py` — V5 options module retained as a secondary confirmation lens
-- `korean_stock_search.py`, `sitecustomize.py` — resilient Korean ticker search
+```bash
+python smoke_test.py
+```
 
-## Important limitations
+The offline smoke test checks Momentum-vs-Pullback separation, Company missing-data handling, Opportunity, Quant / CAN SLIM, Calibration columns, and SQLite History without network calls.
 
-- Yahoo Finance and free public sources can be delayed, incomplete, or temporarily unavailable.
-- Sector peer lists are pragmatic candidates, not a perfect industry classification database.
-- Korean individual-stock options are not provided by the current free data source.
-- V6 Calibration is not a full point-in-time fundamental backtest.
-- Support/resistance zones are model-derived references, not guaranteed reaction prices.
-- The application is for research and educational use and is not investment advice.
+## Disclaimer
+
+This project is for informational and educational purposes only. Public market data may be delayed, missing, revised, affected by corporate actions, or inconsistent between markets. Scores and calibration statistics are not investment advice or probabilities of future returns.

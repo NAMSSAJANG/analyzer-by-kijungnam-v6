@@ -15,6 +15,8 @@ from company_engine import build_company_snapshot
 from core_models import MarketRegimeSnapshot
 from history_store import SQLiteHistoryStore
 from opportunity_engine import build_opportunity
+from quant_engine import build_quant_snapshot
+from calibration_engine import run_setup_calibration
 from risk_engine import build_risk_snapshot
 from setup_engine import build_setups
 from sr_engine import build_zones
@@ -59,10 +61,17 @@ def main():
     company=build_company_snapshot({"revenueGrowth":.22,"earningsGrowth":.28,"operatingMargins":.24,"profitMargins":.18,"returnOnEquity":.26,"debtToEquity":55,"currentRatio":1.6,"trailingPE":28,"forwardPE":24,"priceToBook":5,"totalRevenue":1e11,"freeCashflow":1.5e10})
     opportunity=build_opportunity(company,tech,market)
     assert opportunity.score > 60
+    quant=build_quant_snapshot(frame,company,tech,market,zones.supports,zones.resistances)
+    assert quant["score"] > 50
+    assert set(quant["can_slim"]) == {"C","A","N","S","L","I","M"}
 
     missing=build_company_snapshot({"revenueGrowth":.18})
     assert missing.coverage < company.coverage
     assert missing.score is not None  # missing fields are excluded, not hard-coded to zero
+
+    detail, summary = run_setup_calibration(frame, bench, threshold=60)
+    assert not detail.empty
+    assert {"Signals","Independent","Median 20D"}.issubset(summary.columns)
 
     with tempfile.TemporaryDirectory() as tmp:
         store=SQLiteHistoryStore(Path(tmp)/"history.sqlite")
