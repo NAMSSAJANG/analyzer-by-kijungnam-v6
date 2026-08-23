@@ -139,7 +139,7 @@ st.markdown("""
 h1,h2,h3{letter-spacing:-.025em}
 .v6-section{height:1px;margin:46px 0 20px}
 .v6-card{box-sizing:border-box;border:1px solid #29415e;border-radius:16px;padding:19px;background:#0d1b2d;height:100%;min-height:176px;margin-bottom:18px}
-.v6-card.compact{height:226px;min-height:226px;overflow:auto}.v6-card.summary{height:205px;min-height:205px;overflow:hidden}.v6-card.risk{height:220px;min-height:220px}.v6-card.entry{height:198px;min-height:198px;margin-bottom:20px}.v6-card.consensus-lens{height:172px;min-height:172px;overflow:hidden}
+.v6-card.compact{height:226px;min-height:226px;overflow:auto}.v6-card.summary{height:224px;min-height:224px;overflow:hidden}.v6-card.risk{height:220px;min-height:220px}.v6-card.entry{height:198px;min-height:198px;margin-bottom:20px}.v6-card.consensus-lens{height:206px;min-height:206px;overflow:hidden}
 .v6-kicker{font-size:.72rem;font-weight:850;letter-spacing:.14em;color:#38bdf8;margin-bottom:9px}
 .v6-value{font-size:2rem;font-weight:900;color:#f8fafc;line-height:1.15;margin:4px 0 8px}.v6-sub{color:#94a3b8;line-height:1.65;font-size:.88rem}
 .v6-pill{display:inline-block;border-radius:99px;padding:4px 9px;background:#102c46;color:#7dd3fc;font-weight:750;margin:3px 4px 3px 0}
@@ -345,13 +345,21 @@ MOMENTUM_FACTOR_KO = {
 }
 
 
+def _multiline_card_label(label: str) -> str:
+    if "(" in label and ")" in label:
+        ko, rest = label.split("(", 1)
+        return f"{ko.strip()}<br><span style='color:#94a3b8'>({rest}</span>"
+    return label
+
+
 def score_card(label: str, value: float | None, subtitle: str = "", compact: bool = False, summary: bool = False):
     if value is None:
         shown, color, state = "N/A", "#94a3b8", "데이터 부족"
     else:
         shown, color, state = f"{value:.1f}", score_color(value), grade_ko(value)
     cls = "v6-card compact" if compact else "v6-card summary" if summary else "v6-card"
-    st.markdown(f"<div class='{cls}'><div class='v6-kicker'>{label}</div><div class='v6-value' style='color:{color}'>{shown}</div><div style='color:{color};font-weight:800;margin-bottom:6px'>{state}</div><div class='v6-sub'>{subtitle}</div></div>", unsafe_allow_html=True)
+    label_html = _multiline_card_label(label) if summary else label
+    st.markdown(f"<div class='{cls}'><div class='v6-kicker'>{label_html}</div><div class='v6-value' style='color:{color}'>{shown}</div><div style='color:{color};font-weight:800;margin-bottom:6px'>{state}</div><div class='v6-sub'>{subtitle}</div></div>", unsafe_allow_html=True)
 
 
 def briefing(title: str, body: str, kicker: str = "AI BRIEF", wide: bool = False):
@@ -633,21 +641,28 @@ def _render_trajectory_summary(plot: pd.DataFrame, columns: list[str]) -> None:
 
 
 def _annotation_shifts(values_by_series: dict[str, float]) -> dict[str, int]:
-    """Place labels away from their own marker/line and from nearby series."""
+    """Place labels close to their own marker while avoiding nearby series."""
     valid = [(name, value) for name, value in values_by_series.items() if np.isfinite(value)]
     if not valid:
         return {}
     ordered = sorted(valid, key=lambda item: item[1])
     if len(ordered) == 1:
-        return {ordered[0][0]: 20}
+        return {ordered[0][0]: 12}
     if len(ordered) == 2:
-        return {ordered[0][0]: -22, ordered[1][0]: 22}
-    shifts = {ordered[0][0]: -22, ordered[-1][0]: 22}
+        return {ordered[0][0]: -12, ordered[1][0]: 12}
+
+    shifts = {ordered[0][0]: -12, ordered[-1][0]: 12}
     for idx in range(1, len(ordered) - 1):
         name, value = ordered[idx]
         lower_gap = value - ordered[idx - 1][1]
         upper_gap = ordered[idx + 1][1] - value
-        shifts[name] = 24 if upper_gap >= lower_gap else -24
+        base = 10 if min(lower_gap, upper_gap) >= 8 else 12
+        if upper_gap - lower_gap >= 5:
+            shifts[name] = base
+        elif lower_gap - upper_gap >= 5:
+            shifts[name] = -base
+        else:
+            shifts[name] = base if idx % 2 == 0 else -base
     return shifts
 
 
@@ -696,7 +711,7 @@ def trajectory_chart(frame: pd.DataFrame, columns: list[str], key: str, title: s
             display, color, _ = SERIES_STYLE.get(series_name, (series_name, "#cbd5e1", "top center"))
             fig.add_annotation(
                 x=i, y=value, text=f"{value:.0f}", showarrow=False,
-                yshift=shifts.get(series_name, 20),
+                yshift=shifts.get(series_name, 12),
                 font=dict(color=color, size=11),
                 bgcolor="rgba(7,17,31,.82)",
                 borderpad=1.5,
@@ -975,7 +990,7 @@ def render_analysis(a: dict, symbol: str):
     inf,tech,market,company,risk,setups,opp = a["info"],a["tech"],a["market"],a["company"],a["risk"],a["setups"],a["opportunity"]
     name=inf.get("longName") or inf.get("shortName") or symbol
     st.header(f"{name} · {symbol}")
-    st.caption(f"V6.0.4 종합분석 · 데이터 기준 {pd.Timestamp(a['frame'].index[-1]).date()} · {a['region']} Market · Sector {a['sector'] or 'N/A'}")
+    st.caption(f"V6.0.5 종합분석 · 데이터 기준 {pd.Timestamp(a['frame'].index[-1]).date()} · {a['region']} Market · Sector {a['sector'] or 'N/A'}")
 
     st.subheader("종합 판단 요약")
     pcls=status_class(setups.preferred); rcls=status_class(risk.level)
@@ -1026,7 +1041,7 @@ def render_analysis(a: dict, symbol: str):
     render_sr_and_chart(a)
 
     data_date=pd.Timestamp(a["frame"].index[-1]).date()
-    HISTORY.record(symbol,{"opportunity":opp.score,"company":company.score,"trend":tech.trend,"momentum":tech.momentum,"relative_strength":tech.relative_strength,"pullback":setups.pullback.score,"momentum_entry":setups.momentum.score,"market":market.score,"risk":risk.score,"preferred_setup":setups.preferred},data_date,{"version":"6.0.4","source":"recorded"})
+    HISTORY.record(symbol,{"opportunity":opp.score,"company":company.score,"trend":tech.trend,"momentum":tech.momentum,"relative_strength":tech.relative_strength,"pullback":setups.pullback.score,"momentum_entry":setups.momentum.score,"market":market.score,"risk":risk.score,"preferred_setup":setups.preferred},data_date,{"version":"6.0.5","source":"recorded"})
 
     with st.expander("최근 뉴스"):
         rows=news(symbol)

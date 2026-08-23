@@ -1,3 +1,10 @@
+# Changelog
+
+## V6.0.5
+- Polished summary card labels with Korean-first / English-on-next-line formatting for aligned value rows.
+- Increased Consensus lens card height so long notes (especially Entry Setup) remain fully visible.
+- Refined 10-day chart label offsets so numeric tags stay closer to their own series.
+
 # V6.0.4
 
 - Renamed the top stock overview to **종합 판단 요약 (Decision Summary)** and standardized its five summary cards to the same height.
