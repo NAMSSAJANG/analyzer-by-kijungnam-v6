@@ -1,4 +1,10 @@
-# V6.0.13
+## V6.0.14
+- Added a Calibration scope summary showing the exact threshold meaning, full price-data range, Entry-calculation range, and horizon-specific validation windows/trading-day counts.
+- Added explicit definitions for validation date, reference close, Setup episode, and 5D/10D/20D/60D outcome windows.
+- Added an actual case-generation flow: qualifying trading days → Setup episodes → horizon-specific validation samples.
+- Clarified that 'qualifying trading days' means all days with Entry Score greater than or equal to the selected threshold.
+
+# V6.0.14
 
 - Reworked Entry Calibration sampling so low thresholds (30-50) do not collapse into only a few episode-start cases.
 - Clarified that a threshold means Entry Score >= selected value (e.g. 40 means 40-100).

@@ -15,7 +15,7 @@ HORIZONS = (5, 10, 20, 60)
 PRIMARY_HORIZON = 20
 MAX_CALIBRATION_WINDOW = 420
 MIN_TECH_HISTORY = 230
-CALIBRATION_LOGIC_VERSION = "v613"
+CALIBRATION_LOGIC_VERSION = "v614"
 
 
 def _episode_metadata(mask: pd.Series, reset_days: int = EPISODE_RESET_DAYS) -> tuple[np.ndarray, np.ndarray]:

@@ -15,7 +15,7 @@ import streamlit as st
 import yfinance as yf
 from plotly.subplots import make_subplots
 
-from calibration_engine import run_setup_calibration
+from calibration_engine import HORIZONS, MAX_CALIBRATION_WINDOW, MIN_TECH_HISTORY, run_setup_calibration
 from company_engine import build_company_snapshot
 from consensus_engine import build_consensus_v2
 from history_store import SQLiteHistoryStore
@@ -29,7 +29,7 @@ from setup_engine import build_setups
 from sr_engine import build_zones
 from technical_engine import build_technical_snapshot
 
-st.set_page_config(page_title="Stock Analyzer V6.0.13", page_icon="📈", layout="wide")
+st.set_page_config(page_title="Stock Analyzer V6.0.14", page_icon="📈", layout="wide")
 
 DB_FILE = Path(os.getenv("ANALYZER_DB_FILE", ".data/stock_analyzer_v6.sqlite"))
 HISTORY = SQLiteHistoryStore(DB_FILE)
@@ -160,14 +160,14 @@ h1,h2,h3{letter-spacing:-.025em}
 .delta-card{box-sizing:border-box;border:1px solid #29415e;border-radius:12px;padding:12px 14px;background:#0d1b2d;min-height:92px;margin:4px 0 14px}.delta-label{color:#94a3b8;font-size:.78rem;font-weight:800;line-height:1.4}.delta-value{font-size:1.22rem;font-weight:900;margin-top:6px}.delta-change{font-size:.83rem;font-weight:800;margin-left:7px}
 .risk-summary{border:1px solid #29415e;border-radius:12px;padding:13px 16px;background:#0a1728;margin:4px 0 10px;color:#cbd5e1;line-height:1.65}.consensus-summary{border:1px solid #315272;border-radius:16px;padding:18px 20px;background:linear-gradient(135deg,#0d1b2d,#10243a);margin:10px 0 16px;line-height:1.75;color:#dbeafe}.consensus-meter{border:1px solid #29415e;border-radius:13px;padding:14px 16px;background:#0a1728;min-height:104px}.consensus-meter .label{color:#94a3b8;font-size:.8rem;font-weight:800}.consensus-meter .value{font-size:1.7rem;font-weight:900;margin-top:7px;color:#f8fafc}
 .entry-decision-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:18px 0 12px}.entry-decision-card{box-sizing:border-box;border:1px solid #29415e;border-radius:14px;padding:16px 17px;background:#0a1728;min-height:122px}.entry-decision-label{color:#94a3b8;font-size:.76rem;font-weight:850;line-height:1.45}.entry-decision-value{font-size:1.34rem;font-weight:900;margin-top:9px;line-height:1.35}.entry-decision-interpretation{border:1px solid #315272;border-radius:14px;padding:17px 19px;background:linear-gradient(135deg,#0d1b2d,#10243a);color:#dbeafe;line-height:1.75;margin-bottom:18px}.entry-decision-interpretation b{color:#f8fafc}
-.dashboard-hero{border:1px solid #315272;border-radius:18px;padding:22px;background:linear-gradient(135deg,#0d1b2d,#10243a);margin:14px 0 20px}.dashboard-hero h2{margin:.25rem 0 .75rem}.dashboard-hero p{color:#dbeafe;line-height:1.75;margin:.38rem 0}.dashboard-mini{box-sizing:border-box;border:1px solid #29415e;border-radius:14px;padding:16px 17px;background:#0a1728;min-height:142px;height:100%;margin-bottom:16px}.dashboard-mini .label{font-size:.75rem;font-weight:850;color:#94a3b8;line-height:1.4}.dashboard-mini .value{font-size:1.38rem;font-weight:900;color:#f8fafc;margin:8px 0 5px;line-height:1.3}.quant-profile{border:1px solid #315272;border-radius:16px;padding:18px 20px;background:#0a1728;margin:10px 0 18px}.quant-profile h3{margin:.15rem 0 .6rem}.quant-link{border:1px solid #315272;border-radius:16px;padding:18px 20px;background:linear-gradient(135deg,#0d1b2d,#10243a);margin:10px 0 18px;line-height:1.75;color:#dbeafe}.quant-chart-box{box-sizing:border-box;border:1px solid #29415e;border-radius:14px;padding:16px 17px;background:#0a1728;min-height:186px;height:100%;margin-bottom:14px}.quant-chart-box .title{font-weight:900;color:#f8fafc;margin-bottom:8px}.cal-period-title{font-weight:900;color:#f8fafc;margin:16px 0 8px}.cal-period-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.cal-period{border:1px solid #20344d;border-radius:10px;background:#071522;padding:10px 11px;min-height:72px}.cal-period .k{font-size:.72rem;color:#94a3b8;font-weight:850}.cal-period .v{font-size:1.08rem;color:#f8fafc;font-weight:900;margin-top:5px}.cal-period-note{color:#8292a8;font-size:.78rem;line-height:1.55;margin:9px 0 13px}
+.dashboard-hero{border:1px solid #315272;border-radius:18px;padding:22px;background:linear-gradient(135deg,#0d1b2d,#10243a);margin:14px 0 20px}.dashboard-hero h2{margin:.25rem 0 .75rem}.dashboard-hero p{color:#dbeafe;line-height:1.75;margin:.38rem 0}.dashboard-mini{box-sizing:border-box;border:1px solid #29415e;border-radius:14px;padding:16px 17px;background:#0a1728;min-height:142px;height:100%;margin-bottom:16px}.dashboard-mini .label{font-size:.75rem;font-weight:850;color:#94a3b8;line-height:1.4}.dashboard-mini .value{font-size:1.38rem;font-weight:900;color:#f8fafc;margin:8px 0 5px;line-height:1.3}.quant-profile{border:1px solid #315272;border-radius:16px;padding:18px 20px;background:#0a1728;margin:10px 0 18px}.quant-profile h3{margin:.15rem 0 .6rem}.quant-link{border:1px solid #315272;border-radius:16px;padding:18px 20px;background:linear-gradient(135deg,#0d1b2d,#10243a);margin:10px 0 18px;line-height:1.75;color:#dbeafe}.quant-chart-box{box-sizing:border-box;border:1px solid #29415e;border-radius:14px;padding:16px 17px;background:#0a1728;min-height:186px;height:100%;margin-bottom:14px}.quant-chart-box .title{font-weight:900;color:#f8fafc;margin-bottom:8px}.cal-period-title{font-weight:900;color:#f8fafc;margin:16px 0 8px}.cal-period-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.cal-period{border:1px solid #20344d;border-radius:10px;background:#071522;padding:10px 11px;min-height:72px}.cal-period .k{font-size:.72rem;color:#94a3b8;font-weight:850}.cal-period .v{font-size:1.08rem;color:#f8fafc;font-weight:900;margin-top:5px}.cal-period-note{color:#8292a8;font-size:.78rem;line-height:1.55;margin:9px 0 13px}.cal-scope-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0 14px}.cal-scope-card{box-sizing:border-box;border:1px solid #29415e;border-radius:12px;background:#0a1728;padding:13px 14px;min-height:110px}.cal-scope-card .k{color:#94a3b8;font-size:.74rem;font-weight:850;line-height:1.4}.cal-scope-card .v{color:#f8fafc;font-size:1.1rem;font-weight:900;margin-top:7px;line-height:1.35}.cal-scope-card .s{color:#8292a8;font-size:.76rem;line-height:1.45;margin-top:5px}.cal-flow{border:1px solid #315272;border-radius:14px;background:#071522;padding:14px 16px;line-height:1.75;color:#dbeafe;margin:12px 0 16px}.cal-flow b{color:#f8fafc}.cal-scope-table-note{color:#94a3b8;font-size:.8rem;line-height:1.6;margin:7px 0 12px}
 [data-testid="stMetricValue"]{font-size:clamp(1.4rem,2.5vw,2.1rem)}
 [data-testid="stDataFrame"]{border:1px solid #29415e;border-radius:10px;overflow:hidden}
 div[data-testid="stHorizontalBlock"]{gap:1.15rem;align-items:stretch}
 div[data-testid="stHorizontalBlock"]>div[data-testid="stColumn"]{min-height:100%}
 [data-testid="stDataFrame"]{margin-bottom:16px}
 hr{margin:2rem 0 2.2rem!important}
-@media(max-width:700px){.block-container{padding-left:.8rem;padding-right:.8rem}.v6-card,.brief-card,.scenario{height:auto;min-height:0}.indicator-row{align-items:flex-start}.entry-decision-grid{grid-template-columns:1fr 1fr}.cal-period-grid{grid-template-columns:1fr 1fr}.dashboard-mini,.quant-chart-box{height:auto;min-height:0}}
+@media(max-width:700px){.block-container{padding-left:.8rem;padding-right:.8rem}.v6-card,.brief-card,.scenario{height:auto;min-height:0}.indicator-row{align-items:flex-start}.entry-decision-grid{grid-template-columns:1fr 1fr}.cal-period-grid{grid-template-columns:1fr 1fr}.dashboard-mini,.quant-chart-box{height:auto;min-height:0}.cal-scope-grid{grid-template-columns:1fr 1fr}}
 </style>
 """, unsafe_allow_html=True)
 
@@ -1903,6 +1903,59 @@ def _historical_alignment(setup_name: str, current_score: float, threshold: int,
     return "낮음", "status-orange", f"현재 {ko} 진입 점수 자체는 검증 기준을 충족하지만, 과거 같은 강도의 신호 이후 결과는 일관적이지 않았습니다. 현재 점수만으로 추격하거나 과신하기보다 진입 비중과 무효화 조건을 보수적으로 보는 편이 좋습니다."
 
 
+
+
+def _calibration_scope(frame: pd.DataFrame) -> dict:
+    """Describe the exact price/history window available to Calibration.
+
+    This mirrors calibration_engine.run_setup_calibration's start rule so the UI
+    can explain how many trading rows are available before a backtest is run.
+    """
+    d = frame.dropna(subset=["Close"]).copy()
+    total = len(d)
+    if total == 0:
+        return {"total": 0, "price_start": None, "price_end": None, "entry": None, "horizons": {}}
+
+    def date_at(idx: int):
+        if idx < 0 or idx >= total:
+            return None
+        return pd.Timestamp(d.index[idx]).date()
+
+    start = max(MIN_TECH_HISTORY, total - MAX_CALIBRATION_WINDOW)
+    entry_count = max(0, total - start)
+    entry_scope = None
+    if entry_count > 0:
+        entry_scope = {
+            "start": date_at(start),
+            "end": date_at(total - 1),
+            "count": entry_count,
+        }
+
+    horizon_scopes = {}
+    for horizon in HORIZONS:
+        count = max(0, total - start - horizon)
+        horizon_scopes[int(horizon)] = {
+            "start": date_at(start) if count > 0 else None,
+            "end": date_at(total - horizon - 1) if count > 0 else None,
+            "count": count,
+        }
+
+    return {
+        "total": total,
+        "price_start": date_at(0),
+        "price_end": date_at(total - 1),
+        "entry": entry_scope,
+        "horizons": horizon_scopes,
+        "warmup": MIN_TECH_HISTORY,
+        "max_window": MAX_CALIBRATION_WINDOW,
+    }
+
+
+def _scope_range_text(scope: dict | None) -> str:
+    if not scope or not scope.get("start") or not scope.get("end"):
+        return "데이터 부족"
+    return f"{scope['start']} ~ {scope['end']}"
+
 def render_calibration(a: dict, symbol: str):
     setups = a["setups"]
     current_view = entry_decision_view(setups)
@@ -1953,6 +2006,45 @@ def render_calibration(a: dict, symbol: str):
     else:
         mode_txt = "엄격 기준 · 사례 수는 줄지만 더 강한 Setup만 남깁니다."
 
+    scope = _calibration_scope(a["frame"])
+    entry_scope = scope.get("entry")
+    h20 = scope.get("horizons", {}).get(20, {})
+    h60 = scope.get("horizons", {}).get(60, {})
+
+    st.markdown("### 검증 기준 요약")
+    st.markdown(
+        f"<div class='cal-scope-grid'>"
+        f"<div class='cal-scope-card'><div class='k'>검증 기준점수</div><div class='v'>Entry Score ≥ {threshold}</div><div class='s'>{threshold}~100점 상태 포함 · Pullback/Momentum 각각 검증</div></div>"
+        f"<div class='cal-scope-card'><div class='k'>전체 가격 데이터</div><div class='v'>{scope['total']:,} 거래일</div><div class='s'>{scope['price_start']} ~ {scope['price_end']}</div></div>"
+        f"<div class='cal-scope-card'><div class='k'>Entry 계산 가능 구간</div><div class='v'>{(entry_scope or {}).get('count', 0):,} 거래일</div><div class='s'>{_scope_range_text(entry_scope)}</div></div>"
+        f"<div class='cal-scope-card'><div class='k'>20D 성과 검증 가능 구간</div><div class='v'>{h20.get('count', 0):,} 거래일</div><div class='s'>{_scope_range_text(h20)}</div></div>"
+        f"</div>",
+        unsafe_allow_html=True,
+    )
+    st.caption(f"전체 가격 데이터 중 초기 약 {scope.get('warmup', MIN_TECH_HISTORY)}거래일은 EMA200 등 장기 기술지표 계산을 위한 워밍업에 사용합니다. 이후 최근 최대 {scope.get('max_window', MAX_CALIBRATION_WINDOW)}거래일 범위에서 Entry Setup을 재계산합니다.")
+
+    with st.expander("검증 데이터 기간 · 기준일 정의 자세히 보기"):
+        horizon_rows = []
+        for h in HORIZONS:
+            hs = scope.get("horizons", {}).get(int(h), {})
+            horizon_rows.append({
+                "성과 구간": f"{h}D",
+                "대략적 기간": {5:"약 1주",10:"약 2주",20:"약 1개월",60:"약 3개월"}.get(int(h), ""),
+                "검증 가능 시작일": hs.get("start"),
+                "검증 가능 종료일": hs.get("end"),
+                "유효 거래일 수": hs.get("count", 0),
+            })
+        st.dataframe(pd.DataFrame(horizon_rows), hide_index=True, use_container_width=True)
+        st.markdown(f"""
+- **검증 기준 {threshold}점**은 정확히 {threshold}점인 날만 뜻하지 않습니다. **Entry Score ≥ {threshold}**, 즉 **{threshold}~100점**의 과거 상태를 포함합니다.
+- **전체 가격 데이터**는 현재 불러온 가격 이력 전체입니다.
+- **Entry 계산 가능 구간**은 EMA200 등 장기 기술지표를 계산할 수 있도록 초기 워밍업 구간을 확보한 뒤 실제 Pullback/Momentum Entry를 재계산하는 기간입니다.
+- **검증 기준일**은 Entry Score가 기준 이상인 거래일 중 각 성과기간과 같은 간격(5/10/20/60거래일)으로 떨어뜨려 선택한 날짜입니다. 같은 Setup이 오래 지속되면 한 Setup 안에서도 여러 기준일이 나올 수 있습니다.
+- **기준가격**은 각 검증 기준일의 **종가**입니다.
+- **5D / 10D / 20D / 60D 성과**는 기준가격 대비 각각 5·10·20·60영업일 후 종가 수익률입니다. 각 기간의 미래 가격이 실제로 존재해야 하므로 기간별 유효 거래일 수와 검증 사례 수가 다를 수 있습니다.
+- **Setup 구간**은 기준 이상 상태가 이어지는 하나의 큰 국면입니다. 기준 아래 상태가 **3거래일 이상** 지속되면 기존 Setup을 종료하고, 이후 다시 기준 이상이 되면 새 Setup으로 봅니다.
+        """)
+
     def current_threshold_line(name: str, score: float) -> str:
         ok = score >= threshold
         tag = "기준 충족" if ok else "기준 미달"
@@ -1981,7 +2073,7 @@ def render_calibration(a: dict, symbol: str):
         """)
 
     run = st.button("과거 진입 검증 실행", type="primary")
-    cache_key = f"calibration_result_v613_{symbol}_{threshold}"
+    cache_key = f"calibration_result_v614_{symbol}_{threshold}"
     if run:
         try:
             with st.spinner("과거 각 거래일의 눌림목·모멘텀 Setup을 재구성하는 중입니다..."):
@@ -2002,7 +2094,7 @@ def render_calibration(a: dict, symbol: str):
         return
 
     if not detail.empty:
-        st.caption(f"검증 신호 평가 구간 · {detail['date'].iloc[0]} ~ {detail['date'].iloc[-1]} · 공통 기준 {threshold}점")
+        st.caption(f"실제 Entry 재계산 성공 구간 · {detail['date'].iloc[0]} ~ {detail['date'].iloc[-1]} · {len(detail):,} 거래일 · 공통 기준 Entry Score ≥ {threshold}")
         st.markdown(
             f"<div class='cal-help'><b>이번 검증에서 사례를 세는 기준</b><br>"
             f"① <b>기준 이상 거래일</b> · Entry 점수가 <b>{threshold}점 이상(≥ {threshold})</b>인 모든 거래일. 즉 {threshold}~100점 상태를 포함합니다.<br>"
@@ -2013,6 +2105,27 @@ def render_calibration(a: dict, symbol: str):
             f"<span class='v6-sub'>Entry 계산에는 각 과거 시점까지 최소 약 230거래일의 가격 이력을 확보하고, 최근 최대 420거래일 범위에서 검증합니다. 각 기간의 미래 가격이 실제로 존재하는 날짜만 해당 기간의 검증 사례로 사용하므로 5D·10D·20D·60D의 사례 수는 서로 다를 수 있습니다.</span></div>",
             unsafe_allow_html=True,
         )
+
+    p_flow = _cal_row(summary, "Pullback")
+    m_flow = _cal_row(summary, "Momentum")
+    if p_flow is not None or m_flow is not None:
+        st.markdown("#### 실제 사례 산출 흐름")
+        for row, title in [(p_flow, "🎯 눌림목 진입"), (m_flow, "🚀 모멘텀 진입")]:
+            if row is None:
+                continue
+            signals = int(row.get("Signals", 0))
+            episodes = int(row.get("Episodes", 0))
+            n5 = int(row.get("Validation 5D", 0))
+            n10 = int(row.get("Validation 10D", 0))
+            n20 = int(row.get("Validation 20D", 0))
+            n60 = int(row.get("Validation 60D", 0))
+            st.markdown(
+                f"<div class='cal-flow'><b>{title}</b><br>"
+                f"Entry Score ≥ {threshold} → <b>기준 이상 거래일 {signals}일</b> → <b>Setup 구간 {episodes}회</b> → "
+                f"검증 사례 <b>5D {n5}회 / 10D {n10}회 / 20D {n20}회 / 60D {n60}회</b><br>"
+                f"<span class='v6-sub'>기준 이상 거래일은 Entry Score ≥ {threshold}였던 총 거래일 수이며, 실제 성과 평가는 기간별 간격을 적용해 선택한 검증 기준일로 계산합니다.</span></div>",
+                unsafe_allow_html=True,
+            )
 
     st.markdown("<div class='v6-section'></div>", unsafe_allow_html=True)
     st.subheader("3. 이 종목의 과거 Entry 성향")
@@ -2071,7 +2184,7 @@ def render_calibration(a: dict, symbol: str):
                 f"<div class='cal-stat'><div class='k'>대표 수익률 · 20D Median</div><div class='v'>{med_text}</div></div>"
                 f"<div class='cal-stat'><div class='k'>평균 최대 하락폭 · MDD20</div><div class='v'>{mdd_text}</div></div>"
                 f"<div class='cal-stat'><div class='k'>Setup 구간</div><div class='v'>{episodes}회</div></div>"
-                f"<div class='cal-stat'><div class='k'>기준 이상 거래일</div><div class='v'>{int(row.get('Signals', 0))}일</div></div>"
+                f"<div class='cal-stat'><div class='k'>기준 이상 거래일<br><span style='font-weight:600'>Entry Score ≥ 기준</span></div><div class='v'>{int(row.get('Signals', 0))}일</div></div>"
                 f"<div class='cal-stat'><div class='k'>표본 신뢰도</div><div class='v {confidence_cls}'>{confidence}</div></div>"
                 f"</div>"
                 f"<div class='cal-period-title'>기간별 평균 수익률</div><div class='cal-period-grid'>"
@@ -2207,7 +2320,7 @@ def render_calibration(a: dict, symbol: str):
 
 # -------------------- App shell --------------------
 st.title("Stock Analyzer by Kijungnam")
-st.caption("V6.0.13 · MULTI-LENS SETUP & DECISION SYSTEM · Scanner → Decision Dashboard → Deep Analysis")
+st.caption("V6.0.14 · MULTI-LENS SETUP & DECISION SYSTEM · Scanner → Decision Dashboard → Deep Analysis")
 
 with st.expander("🔥 V6 종목 스캐너 · 시장 전체 후보 찾기", expanded=False):
     render_scanner_section()
