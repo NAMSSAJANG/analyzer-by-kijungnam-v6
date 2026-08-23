@@ -29,7 +29,7 @@ from setup_engine import build_setups
 from sr_engine import build_zones
 from technical_engine import build_technical_snapshot
 
-st.set_page_config(page_title="Stock Analyzer V6.0.3", page_icon="📈", layout="wide")
+st.set_page_config(page_title="Stock Analyzer V6.0.4", page_icon="📈", layout="wide")
 
 DB_FILE = Path(os.getenv("ANALYZER_DB_FILE", ".data/stock_analyzer_v6.sqlite"))
 HISTORY = SQLiteHistoryStore(DB_FILE)
@@ -84,6 +84,14 @@ COMPANY_FACTOR_LABELS = {
     "Valuation": "가치평가 (Valuation)",
 }
 
+COMPANY_FACTOR_GUIDE = {
+    "Growth": "매출과 이익이 얼마나 빠르고 지속적으로 성장하는지를 봅니다. 높을수록 최근 성장 속도와 이익 확장성이 강하다는 의미입니다.",
+    "Profitability": "매출을 이익으로 전환하는 능력과 자본 효율성을 봅니다. 마진과 ROE가 안정적일수록 높은 평가를 받습니다.",
+    "Balance Sheet": "부채 부담과 유동성, 자본 구조의 안정성을 봅니다. 재무 여력이 충분할수록 경기 변동에 대응하기 유리합니다.",
+    "Cash Flow": "회계상 이익이 실제 현금 창출로 이어지는지를 봅니다. 낮은 점수는 현금 창출력이나 관련 데이터의 추가 확인이 필요하다는 뜻입니다.",
+    "Valuation": "현재 주가가 기업의 성장성과 수익성에 비해 어느 수준에서 거래되는지를 봅니다. 높은 점수가 절대적으로 싸다는 뜻은 아닙니다.",
+}
+
 AUX_LABELS = {
     "평균회귀": "평균회귀",
     "모멘텀": "모멘텀 (Momentum)",
@@ -131,7 +139,7 @@ st.markdown("""
 h1,h2,h3{letter-spacing:-.025em}
 .v6-section{height:1px;margin:46px 0 20px}
 .v6-card{box-sizing:border-box;border:1px solid #29415e;border-radius:16px;padding:19px;background:#0d1b2d;height:100%;min-height:176px;margin-bottom:18px}
-.v6-card.compact{height:214px;min-height:214px;overflow:auto}.v6-card.risk{height:220px;min-height:220px}.v6-card.entry{height:198px;min-height:198px;margin-bottom:20px}
+.v6-card.compact{height:226px;min-height:226px;overflow:auto}.v6-card.summary{height:205px;min-height:205px;overflow:hidden}.v6-card.risk{height:220px;min-height:220px}.v6-card.entry{height:198px;min-height:198px;margin-bottom:20px}.v6-card.consensus-lens{height:172px;min-height:172px;overflow:hidden}
 .v6-kicker{font-size:.72rem;font-weight:850;letter-spacing:.14em;color:#38bdf8;margin-bottom:9px}
 .v6-value{font-size:2rem;font-weight:900;color:#f8fafc;line-height:1.15;margin:4px 0 8px}.v6-sub{color:#94a3b8;line-height:1.65;font-size:.88rem}
 .v6-pill{display:inline-block;border-radius:99px;padding:4px 9px;background:#102c46;color:#7dd3fc;font-weight:750;margin:3px 4px 3px 0}
@@ -149,7 +157,7 @@ h1,h2,h3{letter-spacing:-.025em}
 .pulse-head{display:flex;justify-content:space-between;gap:8px;align-items:baseline}.pulse-head b{color:#f8fafc}.pulse-up{color:#34d399}.pulse-down{color:#fb7185}
 .cal-help{border:1px solid #315272;background:#0d1b2d;border-radius:14px;padding:15px 17px;line-height:1.72;color:#cbd5e1;margin:8px 0 15px}
 .delta-card{box-sizing:border-box;border:1px solid #29415e;border-radius:12px;padding:12px 14px;background:#0d1b2d;min-height:92px;margin:4px 0 14px}.delta-label{color:#94a3b8;font-size:.78rem;font-weight:800;line-height:1.4}.delta-value{font-size:1.22rem;font-weight:900;margin-top:6px}.delta-change{font-size:.83rem;font-weight:800;margin-left:7px}
-.risk-summary{border:1px solid #29415e;border-radius:12px;padding:13px 16px;background:#0a1728;margin:4px 0 10px;color:#cbd5e1;line-height:1.65}
+.risk-summary{border:1px solid #29415e;border-radius:12px;padding:13px 16px;background:#0a1728;margin:4px 0 10px;color:#cbd5e1;line-height:1.65}.consensus-summary{border:1px solid #315272;border-radius:16px;padding:18px 20px;background:linear-gradient(135deg,#0d1b2d,#10243a);margin:10px 0 16px;line-height:1.75;color:#dbeafe}.consensus-meter{border:1px solid #29415e;border-radius:13px;padding:14px 16px;background:#0a1728;min-height:104px}.consensus-meter .label{color:#94a3b8;font-size:.8rem;font-weight:800}.consensus-meter .value{font-size:1.7rem;font-weight:900;margin-top:7px;color:#f8fafc}
 [data-testid="stMetricValue"]{font-size:clamp(1.4rem,2.5vw,2.1rem)}
 [data-testid="stDataFrame"]{border:1px solid #29415e;border-radius:10px;overflow:hidden}
 div[data-testid="stHorizontalBlock"]{gap:1.15rem;align-items:stretch}
@@ -337,12 +345,12 @@ MOMENTUM_FACTOR_KO = {
 }
 
 
-def score_card(label: str, value: float | None, subtitle: str = "", compact: bool = False):
+def score_card(label: str, value: float | None, subtitle: str = "", compact: bool = False, summary: bool = False):
     if value is None:
         shown, color, state = "N/A", "#94a3b8", "데이터 부족"
     else:
         shown, color, state = f"{value:.1f}", score_color(value), grade_ko(value)
-    cls = "v6-card compact" if compact else "v6-card"
+    cls = "v6-card compact" if compact else "v6-card summary" if summary else "v6-card"
     st.markdown(f"<div class='{cls}'><div class='v6-kicker'>{label}</div><div class='v6-value' style='color:{color}'>{shown}</div><div style='color:{color};font-weight:800;margin-bottom:6px'>{state}</div><div class='v6-sub'>{subtitle}</div></div>", unsafe_allow_html=True)
 
 
@@ -858,7 +866,7 @@ def render_company_summary(a: dict):
             score_card(
                 COMPANY_FACTOR_LABELS.get(label, label),
                 value,
-                "사용 가능한 재무 데이터로 계산 · 비교 데이터가 충분하면 업종 상대평가를 함께 반영",
+                COMPANY_FACTOR_GUIDE.get(label, "기업 품질의 세부 축을 평가합니다."),
                 compact=True,
             )
     if company.relative:
@@ -871,16 +879,50 @@ def render_company_summary(a: dict):
 
 def render_consensus(a: dict):
     cons = a["consensus"]
+    company, tech, setups, market = a["company"], a["tech"], a["setups"], a["market"]
+    quant = a["quant"]
+    option_label = a.get("option_label", "N/A")
+
     st.markdown("<div class='v6-section'></div>", unsafe_allow_html=True)
-    st.subheader("Multi-Lens Consensus V2")
-    c1,c2,c3 = st.columns(3)
-    c1.metric("Supportive Lenses", f"{cons.supportive} / {cons.available}")
-    c2.metric("Signal Agreement", f"{cons.signal_agreement}%")
-    c3.metric("Data Confidence", f"{cons.data_confidence}%")
-    st.info(f"**{cons.headline} · {cons.pattern}**  \n{cons.interpretation}")
-    with st.expander("Consensus 렌즈 상세"):
+    st.subheader("Analysis Consensus · 분석 관점 일치도")
+    st.caption("종합 판단 요약이 '현재 이 종목의 상태'를 보여준다면, Consensus는 서로 다른 분석 관점이 그 판단을 얼마나 같은 방향으로 지지하는지 교차 확인합니다.")
+
+    lens_cols = st.columns(5)
+    lens_items = [
+        ("기업 분석", "Company Quality", company.score, grade_ko(company.score) if company.score is not None else "데이터 부족", f"데이터 커버리지 {company.coverage*100:.0f}%"),
+        ("퀀트·추세", "Quant / Trend", quant["score"], grade_ko(quant["score"]), f"퀀트 {quant['score']:.0f} · 추세 {tech.trend:.0f}"),
+        ("진입 Setup", "Entry Setup", max(setups.pullback.score, setups.momentum.score), preferred_ko(setups.preferred), f"눌림목 {setups.pullback.score:.0f} · 모멘텀 {setups.momentum.score:.0f}"),
+        ("시장 국면", "Market Regime", market.score, market_label_ko(market.label), f"데이터 품질 {market.data_quality*100:.0f}%"),
+        ("옵션 확인", "Options Confirmation", None, option_label if option_label != "N/A" else "N/A", "현물 판단의 보조 확인값"),
+    ]
+    for col, (ko, en, score, state, note) in zip(lens_cols, lens_items):
+        with col:
+            if score is None:
+                shown, color = state, "#94a3b8"
+            else:
+                shown, color = f"{score:.1f}", score_color(float(score))
+            st.markdown(
+                f"<div class='v6-card consensus-lens'><div class='v6-kicker'>{ko}<br><span style='color:#64748b'>{en}</span></div>"
+                f"<div class='v6-value' style='color:{color}'>{shown}</div>"
+                f"<div style='font-weight:850;color:{color};line-height:1.35'>{state}</div>"
+                f"<div class='v6-sub' style='margin-top:8px'>{note}</div></div>",
+                unsafe_allow_html=True,
+            )
+
+    m1, m2 = st.columns(2)
+    with m1:
+        st.markdown(f"<div class='consensus-meter'><div class='label'>Signal Agreement · 신호 일치도</div><div class='value'>{cons.signal_agreement}%</div><div class='v6-sub'>각 렌즈의 방향이 얼마나 같은 쪽을 가리키는지 보여줍니다. 상승 확률이 아닙니다.</div></div>", unsafe_allow_html=True)
+    with m2:
+        st.markdown(f"<div class='consensus-meter'><div class='label'>Data Confidence · 데이터 신뢰도</div><div class='value'>{cons.data_confidence}%</div><div class='v6-sub'>재무·시장·옵션 등 원자료의 커버리지와 충실도를 나타냅니다.</div></div>", unsafe_allow_html=True)
+
+    st.markdown(
+        f"<div class='consensus-summary'><div class='v6-kicker'>CONSENSUS INTERPRETATION</div>"
+        f"<b>{cons.headline}</b> · {cons.pattern}<br><br>{cons.interpretation}</div>",
+        unsafe_allow_html=True,
+    )
+    with st.expander("Consensus 계산에 사용된 원래 Lens 상태 보기"):
         st.dataframe(pd.DataFrame([{"Lens":k,"판단":v} for k,v in cons.lenses.items()]), hide_index=True, use_container_width=True)
-        st.caption("Signal Agreement는 렌즈 방향의 일치도, Data Confidence는 원자료 충실도입니다. 상승 확률이 아닙니다.")
+        st.caption("Signal Agreement는 렌즈 방향의 일치도, Data Confidence는 원자료 충실도입니다. 둘 다 미래 수익률이나 상승 확률을 뜻하지 않습니다.")
 
 
 def render_scenarios(a: dict):
@@ -933,54 +975,58 @@ def render_analysis(a: dict, symbol: str):
     inf,tech,market,company,risk,setups,opp = a["info"],a["tech"],a["market"],a["company"],a["risk"],a["setups"],a["opportunity"]
     name=inf.get("longName") or inf.get("shortName") or symbol
     st.header(f"{name} · {symbol}")
-    st.caption(f"V6.0.3 종합분석 · 데이터 기준 {pd.Timestamp(a['frame'].index[-1]).date()} · {a['region']} Market · Sector {a['sector'] or 'N/A'}")
+    st.caption(f"V6.0.4 종합분석 · 데이터 기준 {pd.Timestamp(a['frame'].index[-1]).date()} · {a['region']} Market · Sector {a['sector'] or 'N/A'}")
 
+    st.subheader("종합 판단 요약")
     pcls=status_class(setups.preferred); rcls=status_class(risk.level)
-    st.markdown(f"""<div class='decision'><div class='v6-kicker'>V6 MULTI-LENS DECISION</div>
+    st.markdown(f"""<div class='decision'><div class='v6-kicker'>V6 MULTI-LENS DECISION SUMMARY</div>
     <h2>종목 매력도 (Opportunity) {opp.score:.1f} · {grade_ko(opp.score)}</h2>
     <p><b>우선 진입 방식 (Preferred Setup)</b> · <span class='{pcls}'>{preferred_ko(setups.preferred)}</span> &nbsp; | &nbsp; <b>위험</b> · <span class='{rcls}'>{risk_ko(risk.level)}</span> &nbsp; | &nbsp; <b>시장 국면</b> · {market_label_ko(market.label)}</p>
     <p>{opp.interpretation} {setups.summary}</p></div>""", unsafe_allow_html=True)
 
     cols=st.columns(5)
     items=[
-        ("종목 매력도 (Opportunity)",opp.score,"좋은 종목인가 · Entry/Risk 별도"),
-        ("기업 품질 (Company Quality)",company.score,f"Coverage {company.coverage*100:.0f}% · {company.confidence}"),
+        ("종목 매력도 (Opportunity)",opp.score,"좋은 종목인가를 평가 · Entry/Risk는 별도"),
+        ("기업 품질 (Company Quality)",company.score,f"데이터 커버리지 {company.coverage*100:.0f}% · {company.confidence}"),
         ("추세·리더십 (Trend / Leadership)",tech.trend,f"12M {tech.ret_12m:+.1f}%"),
-        ("상대강도 (Relative Strength)",tech.relative_strength,"시장 벤치마크 대비"),
-        ("모멘텀·수급 (Momentum / Demand)",.60*tech.momentum+.40*tech.demand,f"RSI {tech.rsi:.1f} · Vol {tech.volume_ratio:.2f}x"),
+        ("상대강도 (Relative Strength)",tech.relative_strength,"시장 벤치마크 대비 가격 리더십"),
+        ("모멘텀·수급 (Momentum / Demand)",.60*tech.momentum+.40*tech.demand,f"RSI {tech.rsi:.1f} · 거래량 {tech.volume_ratio:.2f}x"),
     ]
     for col,item in zip(cols,items):
-        with col: score_card(*item)
+        with col: score_card(*item, summary=True)
 
+    # 사용자가 가장 먼저 읽을 수 있는 해설 → 실행 판단 → 위험 → 교차검증 순서
     render_ai_briefings(a)
     render_entry_engine(a)
     render_risk_engine(a)
-    render_company_summary(a)
-
-    st.markdown("<div class='v6-section'></div>", unsafe_allow_html=True)
-    st.subheader("시장 국면")
-    m1,m2=st.columns([1,2])
-    with m1: score_card(f"{market_region_ko(market.market)} 시장 국면",market.score,f"{market_label_ko(market.label)} · 데이터 품질 {market.data_quality*100:.0f}%")
-    with m2:
-        st.dataframe(market_components_frame(market),hide_index=True,use_container_width=True,height=190,column_config={"점수":st.column_config.ProgressColumn("점수", min_value=0, max_value=100, format="%.1f")})
-    st.caption(f"{market_region_ko(market.market)} 시장은 현재 **{market_label_ko(market.label)}** 상태로 해석합니다. 지수·업종·변동성·신용·환율 등 구성요소를 함께 확인하세요.")
-
     render_consensus(a)
+
     traj=reconstructed_trajectory(a,10)
     st.markdown("<div class='v6-section'></div>", unsafe_allow_html=True)
     with st.expander("종목 매력도 · 눌림목 진입 · 모멘텀 진입 점수 읽는 법", expanded=False):
         st.markdown("""
-- **종목 매력도(Opportunity)**: 기업 품질·추세·상대강도·모멘텀/수급·시장환경을 종합해 **관찰할 가치가 높은 종목인지** 평가합니다. 현재 매수가격이 좋은지와는 별개입니다.
-- **눌림목 진입(Pullback Entry)**: 상승 구조를 유지하면서 지지구간·EMA 부근으로 조정됐는지 평가합니다. 가격 메리트와 손절 거리, 건강한 거래량 감소를 중요하게 봅니다.
-- **모멘텀 진입(Momentum Entry)**: 돌파·신고가 접근·상대강도·거래량 증가를 이용해 **강한 흐름을 따라갈 수 있는지** 평가합니다. RSI가 높다는 이유만으로 자동 감점하지 않습니다.
+- **종목 매력도 (Opportunity)**: 기업 품질·추세·상대강도·모멘텀/수급·시장환경을 종합해 **관찰할 가치가 높은 종목인지** 평가합니다. 현재 매수가격이 좋은지와는 별개입니다.
+- **눌림목 진입 (Pullback Entry)**: 상승 구조를 유지하면서 지지구간·EMA 부근으로 조정됐는지 평가합니다. 가격 메리트와 손절 거리, 건강한 거래량 감소를 중요하게 봅니다.
+- **모멘텀 진입 (Momentum Entry)**: 돌파·신고가 접근·상대강도·거래량 증가를 이용해 **강한 흐름을 따라갈 수 있는지** 평가합니다. RSI가 높다는 이유만으로 자동 감점하지 않습니다.
         """)
-    trajectory_chart(traj,["Opportunity","Pullback","Momentum Entry"],f"overall_traj_{symbol}","최근 10영업일 · 종목 매력도(Opportunity)와 진입 변화")
+    trajectory_chart(traj,["Opportunity","Pullback","Momentum Entry"],f"overall_traj_{symbol}","최근 10영업일 · 종목 매력도와 진입 변화")
+
+    # 아래부터는 판단의 근거를 더 깊게 보는 상세 영역
+    render_company_summary(a)
+
+    st.markdown("<div class='v6-section'></div>", unsafe_allow_html=True)
+    st.subheader("시장 국면 상세 (Market Regime)")
+    m1,m2=st.columns([1,2])
+    with m1: score_card(f"{market_region_ko(market.market)} 시장 국면 (Market Regime)",market.score,f"{market_label_ko(market.label)} · 데이터 품질 {market.data_quality*100:.0f}%")
+    with m2:
+        st.dataframe(market_components_frame(market),hide_index=True,use_container_width=True,height=190,column_config={"점수":st.column_config.ProgressColumn("점수", min_value=0, max_value=100, format="%.1f")})
+    st.caption(f"{market_region_ko(market.market)} 시장은 현재 **{market_label_ko(market.label)}** 상태로 해석합니다. 지수·업종·변동성·신용·환율 등 구성요소를 함께 확인하세요.")
 
     render_scenarios(a)
     render_sr_and_chart(a)
 
     data_date=pd.Timestamp(a["frame"].index[-1]).date()
-    HISTORY.record(symbol,{"opportunity":opp.score,"company":company.score,"trend":tech.trend,"momentum":tech.momentum,"relative_strength":tech.relative_strength,"pullback":setups.pullback.score,"momentum_entry":setups.momentum.score,"market":market.score,"risk":risk.score,"preferred_setup":setups.preferred},data_date,{"version":"6.0.3","source":"recorded"})
+    HISTORY.record(symbol,{"opportunity":opp.score,"company":company.score,"trend":tech.trend,"momentum":tech.momentum,"relative_strength":tech.relative_strength,"pullback":setups.pullback.score,"momentum_entry":setups.momentum.score,"market":market.score,"risk":risk.score,"preferred_setup":setups.preferred},data_date,{"version":"6.0.4","source":"recorded"})
 
     with st.expander("최근 뉴스"):
         rows=news(symbol)
@@ -1346,7 +1392,7 @@ def calibration_summary_text(summary: pd.DataFrame, threshold: int) -> str:
 
 def render_calibration(a: dict, symbol: str):
     st.header(f"Entry Calibration · {symbol}")
-    st.caption("Point-in-time 재무 데이터 누출을 피하기 위해 V6.0.3 Calibration은 가격 기반 Pullback/Momentum Engine만 검증합니다. 시장 국면은 중립으로 고정합니다.")
+    st.caption("Point-in-time 재무 데이터 누출을 피하기 위해 V6.0.4 Calibration은 가격 기반 Pullback/Momentum Engine만 검증합니다. 시장 국면은 중립으로 고정합니다.")
     threshold=st.slider("Signal Threshold · 신호 인정 기준",60,90,75,help="과거 Pullback/Momentum Entry 점수가 이 값 이상인 거래일만 '신호 발생'으로 집계합니다.")
     if threshold<70: mode_txt="넓은 기준 · 신호 수가 많아지지만 약한 Setup도 포함될 수 있습니다."
     elif threshold<80: mode_txt="균형 기준 · 신호 수와 강도의 균형을 보는 구간입니다."
@@ -1383,7 +1429,7 @@ def render_calibration(a: dict, symbol: str):
 
 # -------------------- App shell --------------------
 st.title("Stock Analyzer by Kijungnam")
-st.caption("V6.0.3 · MULTI-LENS SETUP & DECISION SYSTEM · Visual Clarity & Explainability")
+st.caption("V6.0.4 · MULTI-LENS SETUP & DECISION SYSTEM · Decision Summary & Consensus")
 
 with st.expander("🔥 V6 종목 스캐너 · 시장 전체 후보 찾기", expanded=False):
     render_scanner_section()
@@ -1408,7 +1454,7 @@ st.divider()
 analysis=None
 if symbol and mode in ("📊 종합분석","🎯 퀀트분석","🧩 옵션분석","🧪 Calibration"):
     try:
-        with st.spinner(f"{symbol} · V6.0.3 엔진을 계산하는 중입니다..."): analysis=build_full_analysis(symbol)
+        with st.spinner(f"{symbol} · V6.0.4 엔진을 계산하는 중입니다..."): analysis=build_full_analysis(symbol)
     except Exception as exc: st.error(f"분석을 계산하지 못했습니다: {exc}")
 
 if mode=="📊 종합분석":

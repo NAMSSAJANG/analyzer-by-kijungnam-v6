@@ -1,3 +1,12 @@
+# V6.0.4
+
+- Renamed the top stock overview to **종합 판단 요약 (Decision Summary)** and standardized its five summary cards to the same height.
+- Reordered the overall-analysis flow to Decision Summary → AI Briefing → Entry → Risk → Analysis Consensus → 10D trajectory → detailed Company/Market analysis.
+- Added a dedicated **Analysis Consensus · 분석 관점 일치도** section with Company, Quant/Trend, Entry Setup, Market Regime, and Options lenses.
+- Separated **Signal Agreement** from **Data Confidence** and added a plain-language consensus interpretation.
+- Rewrote Company Quality factor descriptions so each card explains what Growth, Profitability, Balance Sheet, Cash Flow, and Valuation actually mean.
+- Kept Opportunity / Entry / Risk scoring engines unchanged; this release focuses on information hierarchy, explainability, and layout consistency.
+
 # V6.0.3
 
 - Polished 10-trading-day charts with vertical trading-day guides, non-overlapping colored score labels, and per-series 5D change summaries.
