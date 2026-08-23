@@ -29,7 +29,7 @@ from setup_engine import build_setups
 from sr_engine import build_zones
 from technical_engine import build_technical_snapshot
 
-st.set_page_config(page_title="Stock Analyzer V6.0.4", page_icon="📈", layout="wide")
+st.set_page_config(page_title="Stock Analyzer V6.0.7", page_icon="📈", layout="wide")
 
 DB_FILE = Path(os.getenv("ANALYZER_DB_FILE", ".data/stock_analyzer_v6.sqlite"))
 HISTORY = SQLiteHistoryStore(DB_FILE)
@@ -156,6 +156,7 @@ h1,h2,h3{letter-spacing:-.025em}
 .pulse-shell{box-sizing:border-box;border:1px solid #29415e;border-radius:13px;padding:14px;background:#0d1b2d;min-height:174px;margin-bottom:10px}
 .pulse-head{display:flex;justify-content:space-between;gap:8px;align-items:baseline}.pulse-head b{color:#f8fafc}.pulse-up{color:#34d399}.pulse-down{color:#fb7185}
 .cal-help{border:1px solid #315272;background:#0d1b2d;border-radius:14px;padding:15px 17px;line-height:1.72;color:#cbd5e1;margin:8px 0 15px}
+.cal-current{box-sizing:border-box;border:1px solid #29415e;border-radius:15px;padding:18px 19px;background:#0d1b2d;min-height:190px;height:190px;margin-bottom:14px}.cal-current .score{font-size:2rem;font-weight:900;line-height:1.1;margin:8px 0}.cal-current .state{font-weight:850;margin-bottom:8px}.cal-compare{border:1px solid #315272;border-radius:16px;padding:18px 20px;background:linear-gradient(135deg,#0d1b2d,#10243a);margin:12px 0 20px;line-height:1.72}.cal-strategy{box-sizing:border-box;border:1px solid #29415e;border-radius:16px;padding:19px 20px;background:#0d1b2d;min-height:410px;height:410px;margin-bottom:18px;overflow:auto}.cal-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.cal-stat{border:1px solid #20344d;border-radius:11px;background:#0a1728;padding:10px 12px}.cal-stat .k{color:#94a3b8;font-size:.76rem;font-weight:800}.cal-stat .v{font-size:1.18rem;font-weight:900;margin-top:4px;color:#f8fafc}.cal-tag{display:inline-block;border-radius:99px;padding:4px 9px;font-size:.78rem;font-weight:850;margin-left:6px}.cal-tag.ok{background:#123c32;color:#6ee7b7}.cal-tag.wait{background:#49371b;color:#fbbf24}.cal-tag.bad{background:#4a2028;color:#fda4af}.cal-style{border:1px solid #315272;border-radius:16px;padding:20px;background:#0a1728;margin:10px 0 20px}.cal-style h3{margin:.15rem 0 .65rem}.cal-section-note{color:#94a3b8;line-height:1.7;margin:-5px 0 14px}
 .delta-card{box-sizing:border-box;border:1px solid #29415e;border-radius:12px;padding:12px 14px;background:#0d1b2d;min-height:92px;margin:4px 0 14px}.delta-label{color:#94a3b8;font-size:.78rem;font-weight:800;line-height:1.4}.delta-value{font-size:1.22rem;font-weight:900;margin-top:6px}.delta-change{font-size:.83rem;font-weight:800;margin-left:7px}
 .risk-summary{border:1px solid #29415e;border-radius:12px;padding:13px 16px;background:#0a1728;margin:4px 0 10px;color:#cbd5e1;line-height:1.65}.consensus-summary{border:1px solid #315272;border-radius:16px;padding:18px 20px;background:linear-gradient(135deg,#0d1b2d,#10243a);margin:10px 0 16px;line-height:1.75;color:#dbeafe}.consensus-meter{border:1px solid #29415e;border-radius:13px;padding:14px 16px;background:#0a1728;min-height:104px}.consensus-meter .label{color:#94a3b8;font-size:.8rem;font-weight:800}.consensus-meter .value{font-size:1.7rem;font-weight:900;margin-top:7px;color:#f8fafc}
 .entry-decision-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:18px 0 12px}.entry-decision-card{box-sizing:border-box;border:1px solid #29415e;border-radius:14px;padding:16px 17px;background:#0a1728;min-height:122px}.entry-decision-label{color:#94a3b8;font-size:.76rem;font-weight:850;line-height:1.45}.entry-decision-value{font-size:1.34rem;font-weight:900;margin-top:9px;line-height:1.35}.entry-decision-interpretation{border:1px solid #315272;border-radius:14px;padding:17px 19px;background:linear-gradient(135deg,#0d1b2d,#10243a);color:#dbeafe;line-height:1.75;margin-bottom:18px}.entry-decision-interpretation b{color:#f8fafc}
@@ -1075,7 +1076,7 @@ def render_analysis(a: dict, symbol: str):
     inf,tech,market,company,risk,setups,opp = a["info"],a["tech"],a["market"],a["company"],a["risk"],a["setups"],a["opportunity"]
     name=inf.get("longName") or inf.get("shortName") or symbol
     st.header(f"{name} · {symbol}")
-    st.caption(f"V6.0.6 종합분석 · 데이터 기준 {pd.Timestamp(a['frame'].index[-1]).date()} · {a['region']} Market · Sector {a['sector'] or 'N/A'}")
+    st.caption(f"V6.0.7 종합분석 · 데이터 기준 {pd.Timestamp(a['frame'].index[-1]).date()} · {a['region']} Market · Sector {a['sector'] or 'N/A'}")
 
     st.subheader("종합 판단 요약")
     entry_view = entry_decision_view(setups)
@@ -1479,59 +1480,318 @@ def render_scanner_section():
         st.info("스캐너 실행 버튼을 누르면 선택한 시장의 후보를 계산합니다.")
 
 
-def calibration_summary_text(summary: pd.DataFrame, threshold: int) -> str:
-    if summary.empty: return "충분한 결과가 없습니다."
-    rows={r["Setup"]:r for _,r in summary.iterrows()}
-    p,m=rows.get("Pullback"),rows.get("Momentum")
-    pieces=[f"현재 기준은 {threshold}점으로, 이 점수 이상이었던 과거 거래일만 진입 신호로 인정했습니다."]
-    if p is not None: pieces.append(f"Pullback은 {int(p['Signals'])}개 일별 신호({int(p['Independent'])}개 독립 에피소드), 20D 양수 비율 {p['Hit 20D']:.1f}%였습니다.")
-    if m is not None: pieces.append(f"Momentum은 {int(m['Signals'])}개 일별 신호({int(m['Independent'])}개 독립 에피소드), 20D 양수 비율 {m['Hit 20D']:.1f}%였습니다.")
-    if p is not None and m is not None and np.isfinite(p["Avg 20D"]) and np.isfinite(m["Avg 20D"]):
-        better="Pullback" if p["Avg 20D"]>m["Avg 20D"] else "Momentum"
-        pieces.append(f"이 표본에서는 {better}의 20영업일 평균 성과가 상대적으로 높았습니다. 평균값은 일부 큰 상승 사례의 영향을 받을 수 있으므로 Median과 MDD도 함께 봐야 합니다.")
-    return " ".join(pieces)
+def _cal_row(summary: pd.DataFrame, setup: str):
+    if summary.empty:
+        return None
+    rows = summary.loc[summary["Setup"] == setup]
+    return rows.iloc[0] if not rows.empty else None
+
+
+def _safe_num(row, key: str, default=np.nan):
+    try:
+        value = float(row[key])
+        return value if np.isfinite(value) else default
+    except Exception:
+        return default
+
+
+def _calibration_style(summary: pd.DataFrame) -> tuple[str, str, str]:
+    """Simple, explainable comparison of the two historical entry styles."""
+    p, m = _cal_row(summary, "Pullback"), _cal_row(summary, "Momentum")
+    if p is None or m is None:
+        return "❔ 판단 자료 부족", "status-muted", "두 진입 방식의 과거 자료가 모두 확보되지 않아 성향을 비교하기 어렵습니다."
+    p_n, m_n = int(p.get("Independent", 0)), int(m.get("Independent", 0))
+    if p_n < 5 and m_n < 5:
+        return "❔ 판단 자료 부족", "status-muted", "독립 사례가 적어 눌림목형·모멘텀형을 구분하기에는 아직 표본이 부족합니다."
+
+    p_points = m_points = 0
+    p_med, m_med = _safe_num(p, "Median 20D"), _safe_num(m, "Median 20D")
+    p_hit, m_hit = _safe_num(p, "Hit 20D"), _safe_num(m, "Hit 20D")
+    p_mdd, m_mdd = _safe_num(p, "Avg MDD20"), _safe_num(m, "Avg MDD20")
+    if np.isfinite(p_med) and np.isfinite(m_med) and abs(p_med - m_med) >= 3:
+        p_points += p_med > m_med
+        m_points += m_med > p_med
+    if np.isfinite(p_hit) and np.isfinite(m_hit) and abs(p_hit - m_hit) >= 10:
+        p_points += p_hit > m_hit
+        m_points += m_hit > p_hit
+    if np.isfinite(p_mdd) and np.isfinite(m_mdd) and abs(p_mdd - m_mdd) >= 2:
+        p_points += p_mdd > m_mdd  # less negative drawdown is better
+        m_points += m_mdd > p_mdd
+
+    if p_n >= 5 and p_points >= 2 and p_points > m_points:
+        return "🎯 눌림목형", "status-teal", "이 검증기간에서는 강한 상승을 추격하기보다 조정·지지 구간을 활용한 눌림목 접근이 상대적으로 더 안정적이거나 효율적인 결과를 보였습니다."
+    if m_n >= 5 and m_points >= 2 and m_points > p_points:
+        return "🚀 모멘텀형", "status-green", "이 검증기간에서는 조정을 오래 기다리기보다 강한 돌파·추세를 따라가는 모멘텀 접근이 상대적으로 더 좋은 결과를 보였습니다."
+    if p_n >= 5 and m_n >= 5:
+        return "⚖️ 혼합형", "status-blue", "두 진입 방식 모두 의미 있는 과거 사례가 있으며 어느 한쪽이 뚜렷하게 우월하다고 보기 어렵습니다. 현재 Setup의 완성도와 Risk를 함께 보는 편이 좋습니다."
+    return "❔ 자료 제한", "status-muted", "한쪽 진입 방식의 독립 사례가 부족해 종목의 Entry 성향을 단정하기 어렵습니다. 충분한 사례가 있는 쪽은 참고자료로만 활용하세요."
+
+
+def _strategy_validation_text(row, setup: str) -> tuple[str, str]:
+    ko = "눌림목 진입" if setup == "Pullback" else "모멘텀 진입"
+    if row is None or int(row.get("Independent", 0)) == 0:
+        return "자료 부족", f"검증 기준 이상인 {ko} 독립 사례가 없어 과거 성과를 해석하기 어렵습니다."
+    n = int(row.get("Independent", 0))
+    hit = _safe_num(row, "Hit 20D")
+    med = _safe_num(row, "Median 20D")
+    avg = _safe_num(row, "Avg 20D")
+    mdd = _safe_num(row, "Avg MDD20")
+    if n < 5:
+        tone = "자료 제한"
+    elif np.isfinite(hit) and np.isfinite(med) and hit >= 70 and med > 0:
+        tone = "과거 결과 우호적"
+    elif np.isfinite(hit) and np.isfinite(med) and hit >= 55 and med > 0:
+        tone = "과거 결과 보통 이상"
+    else:
+        tone = "과거 결과 혼조"
+
+    parts = [f"독립 사례 {n}회를 기준으로 봅니다."]
+    if np.isfinite(hit):
+        parts.append(f"20영업일 뒤 상승한 사례 비율은 {hit:.0f}%였습니다.")
+    if np.isfinite(med) and np.isfinite(avg):
+        gap = abs(avg - med)
+        parts.append(f"대표 수익률(중앙값)은 {med:+.1f}%, 평균 수익률은 {avg:+.1f}%였습니다.")
+        if gap >= 6:
+            parts.append("평균과 대표 수익률 차이가 커 일부 큰 상승·하락 사례가 평균에 영향을 줬을 가능성이 있습니다.")
+        else:
+            parts.append("평균과 대표 수익률이 크게 벌어지지 않아 결과가 특정 한두 사례에만 치우친 정도는 상대적으로 작습니다.")
+    if np.isfinite(mdd):
+        parts.append(f"진입 후 20영업일 동안의 평균 최대 하락폭은 {mdd:.1f}%였습니다.")
+    if n < 5:
+        parts.append("다만 독립 사례가 5회 미만이라 통계적 신뢰도는 낮게 봐야 합니다.")
+    return tone, " ".join(parts)
+
+
+def _historical_alignment(setup_name: str, current_score: float, threshold: int, row) -> tuple[str, str, str]:
+    ko = "눌림목" if setup_name == "Pullback" else "모멘텀"
+    if current_score < threshold:
+        return "아직 확인 필요", "status-yellow", f"현재 {ko} 진입 점수 {current_score:.1f}점은 과거 검증 사례 포함 기준 {threshold}점보다 낮습니다. 현재 방식이 상대적으로 더 나을 수는 있지만, 아직 '강한 과거 Setup'과 같은 강도까지 올라온 것은 아닙니다."
+    if row is None or int(row.get("Independent", 0)) < 5:
+        return "자료 제한", "status-muted", f"현재 {ko} 진입 점수는 {threshold}점 이상이지만 과거 독립 사례가 충분하지 않아 정합성을 강하게 판단하기 어렵습니다."
+    hit = _safe_num(row, "Hit 20D")
+    med = _safe_num(row, "Median 20D")
+    if np.isfinite(hit) and np.isfinite(med) and hit >= 65 and med > 0:
+        return "높음", "status-green", f"현재 {ko} 진입 점수 {current_score:.1f}점은 검증 기준을 충족하며, 과거 같은 기준 이상의 독립 사례도 대체로 우호적인 결과를 보였습니다. 현재 신호와 과거 패턴의 정합성이 높은 편입니다."
+    if np.isfinite(med) and med > 0:
+        return "보통", "status-teal", f"현재 {ko} 진입 점수는 검증 기준을 충족합니다. 과거 결과도 평균적으로는 긍정적이었지만 일관성이 아주 높다고 보기는 어려워 Risk와 현재 시장환경을 함께 확인하는 편이 좋습니다."
+    return "낮음", "status-orange", f"현재 {ko} 진입 점수 자체는 검증 기준을 충족하지만, 과거 같은 강도의 신호 이후 결과는 일관적이지 않았습니다. 현재 점수만으로 추격하거나 과신하기보다 진입 비중과 무효화 조건을 보수적으로 보는 편이 좋습니다."
 
 
 def render_calibration(a: dict, symbol: str):
-    st.header(f"Entry Calibration · {symbol}")
-    st.caption("Point-in-time 재무 데이터 누출을 피하기 위해 V6.0.4 Calibration은 가격 기반 Pullback/Momentum Engine만 검증합니다. 시장 국면은 중립으로 고정합니다.")
-    threshold=st.slider("Signal Threshold · 신호 인정 기준",60,90,75,help="과거 Pullback/Momentum Entry 점수가 이 값 이상인 거래일만 '신호 발생'으로 집계합니다.")
-    if threshold<70: mode_txt="넓은 기준 · 신호 수가 많아지지만 약한 Setup도 포함될 수 있습니다."
-    elif threshold<80: mode_txt="균형 기준 · 신호 수와 강도의 균형을 보는 구간입니다."
-    else: mode_txt="엄격 기준 · 신호 수는 줄지만 강한 Setup만 검증합니다."
-    st.markdown(f"<div class='cal-help'><b>현재 {threshold}점 기준</b><br>Entry Score가 <b>{threshold} 이상</b>이었던 과거 날짜만 Calibration 표에 포함합니다. 기준을 낮추면 신호 수가 늘고, 높이면 더 강한 Setup만 남습니다.<br><span class='status-yellow'>{mode_txt}</span></div>",unsafe_allow_html=True)
-    with st.expander("Calibration은 무엇을 확인하나요?"):
-        st.markdown("Pullback과 Momentum 점수가 특정 기준 이상이었던 과거 날짜를 찾아 그 뒤 **5·10·20·60영업일 수익률**과 **20영업일 최대 낙폭(MDD)**을 계산합니다. 이는 점수 기준을 조정하기 위한 검증 도구이며 미래 수익을 예측하거나 보장하는 확률값이 아닙니다.")
-    if st.button("Calibration 실행",type="primary"):
+    setups = a["setups"]
+    current_view = entry_decision_view(setups)
+    pull, mom = setups.pullback, setups.momentum
+
+    st.header(f"과거 진입 검증 (Entry Calibration) · {symbol}")
+    st.caption("종합분석의 현재 눌림목·모멘텀 Entry 점수를 그대로 가져와, 과거 가격 기반 동일 Setup 규칙에서 비슷한 강도의 신호가 실제로 어떻게 움직였는지 확인합니다. 미래 수익률을 예측하거나 보장하는 확률값은 아닙니다.")
+
+    st.subheader("1. 현재 진입 상태")
+    c1, c2 = st.columns(2)
+    for col, setup, title in [
+        (c1, pull, "🎯 눌림목 진입 (Pullback)"),
+        (c2, mom, "🚀 모멘텀 진입 (Momentum)"),
+    ]:
+        color = score_color(setup.score)
+        with col:
+            st.markdown(
+                f"<div class='cal-current'><div class='v6-kicker'>{title}</div>"
+                f"<div class='score' style='color:{color}'>{setup.score:.1f} / 100</div>"
+                f"<div class='state {entry_status_class(setup)}'>{setup_status_ko(setup)}</div>"
+                f"<div class='v6-sub'>{entry_status_note(setup)}</div></div>",
+                unsafe_allow_html=True,
+            )
+    st.markdown(
+        f"<div class='cal-compare'><div class='v6-kicker'>CURRENT ENTRY DECISION</div>"
+        f"<b>우선 진입 방식</b> · {current_view['approach']}<br>"
+        f"<b>현재 진입 상태</b> · <span class='{current_view['class']}'>{current_view['state']}</span><br><br>"
+        f"{current_view['interpretation']}</div>",
+        unsafe_allow_html=True,
+    )
+
+    st.markdown("<div class='v6-section'></div>", unsafe_allow_html=True)
+    st.subheader("2. 과거 검증 기준")
+    st.markdown("<div class='cal-section-note'>이 기준은 현재 Entry 점수를 바꾸는 값이 아닙니다. 과거 사례 중 어느 정도 이상을 '강한 Setup 검증 사례'로 포함할지 정하는 기준선이며, 눌림목과 모멘텀에 동일하게 적용됩니다.</div>", unsafe_allow_html=True)
+    threshold = st.slider(
+        "검증 사례 포함 기준점수",
+        60, 90, 75,
+        help="과거 눌림목·모멘텀 Entry 점수가 이 값 이상이었던 날짜만 검증 후보로 모읍니다. 현재 점수 자체를 보정하거나 변경하지 않습니다.",
+    )
+    if threshold < 70:
+        mode_txt = "넓은 기준 · 사례 수는 늘지만 약한 Setup도 함께 포함될 수 있습니다."
+    elif threshold < 80:
+        mode_txt = "균형 기준 · 사례 수와 Setup 강도의 균형을 보는 구간입니다."
+    else:
+        mode_txt = "엄격 기준 · 사례 수는 줄지만 더 강한 Setup만 남깁니다."
+
+    def current_threshold_line(name: str, score: float) -> str:
+        ok = score >= threshold
+        tag = "기준 충족" if ok else "기준 미달"
+        cls = "ok" if ok else "wait"
+        symbol_ = "✓" if ok else "—"
+        return f"<b>{name}</b> {score:.1f}점 <span class='cal-tag {cls}'>{symbol_} {tag}</span>"
+
+    st.markdown(
+        f"<div class='cal-help'><b>검증 기준 {threshold} / 100</b><br>"
+        f"{current_threshold_line('눌림목 진입', pull.score)}<br>"
+        f"{current_threshold_line('모멘텀 진입', mom.score)}<br><br>"
+        f"<span class='status-yellow'>{mode_txt}</span></div>",
+        unsafe_allow_html=True,
+    )
+    with st.expander("검증 기준과 현재 Entry 점수의 관계"):
+        st.markdown(f"""
+- 현재 종합분석의 **눌림목 진입 {pull.score:.1f}점 / 모멘텀 진입 {mom.score:.1f}점**을 그대로 표시합니다.
+- **검증 기준 {threshold}점**은 과거 사례를 골라내기 위한 기준입니다. 현재 Entry 점수를 {threshold}점으로 보정하는 값이 아닙니다.
+- 과거 각 거래일에서 눌림목 또는 모멘텀 점수가 {threshold}점 이상이면 해당 전략의 검증 후보로 분류합니다.
+- Calibration에서는 과거 시점 재무 데이터 누출을 피하기 위해 **가격·거래량·기술 구조 중심**으로 재계산하며, 과거 Market Regime 데이터가 아직 완전하지 않아 시장 점수는 50점(중립)으로 고정합니다. 따라서 종합분석의 오늘 점수와 과거 재계산 점수는 완전히 같은 조건은 아닙니다.
+        """)
+
+    run = st.button("과거 진입 검증 실행", type="primary")
+    cache_key = f"calibration_result_{symbol}_{threshold}"
+    if run:
         try:
-            with st.spinner("과거 각 거래일의 Setup을 재구성하는 중입니다..."):
-                detail,summary=run_setup_calibration(a["frame"],a["benchmark"],float(threshold))
-            if summary.empty: st.info("충분한 Calibration 결과가 없습니다.")
-            else:
-                if not detail.empty: st.caption(f"검증 구간 · {detail['date'].iloc[0]} ~ {detail['date'].iloc[-1]} · Threshold {threshold}")
-                shown=summary.rename(columns={"Setup":"Setup","Signals":"일별 신호","Independent":"독립 신호","Hit 20D":"20D 양수 비율","Median 20D":"20D 중앙값","Avg 5D":"평균 5D","Avg 10D":"평균 10D","Avg 20D":"평균 20D","Avg 60D":"평균 60D","Avg MDD20":"평균 MDD20"})
-                fmt={"20D 양수 비율":"{:.1f}%","20D 중앙값":"{:+.2f}%","평균 5D":"{:+.2f}%","평균 10D":"{:+.2f}%","평균 20D":"{:+.2f}%","평균 60D":"{:+.2f}%","평균 MDD20":"{:+.2f}%"}
-                st.dataframe(shown.style.format(fmt,na_rep="—"),hide_index=True,use_container_width=True)
-                st.info("**Calibration 요약** · "+calibration_summary_text(summary,threshold))
-                with st.expander("표 읽는 법",expanded=True):
-                    st.markdown("""
-- **일별 신호**: 점수가 Threshold 이상이었던 거래일 수입니다. 같은 상승 구간에서 여러 날 연속 발생할 수 있습니다.
-- **독립 신호**: 연속 신호를 약 5영업일 간격의 하나의 에피소드로 묶은 참고 수입니다.
-- **20D 양수 비율**: 신호 발생 20영업일 후 수익률이 플러스였던 비율입니다.
-- **20D 중앙값**: 큰 급등 사례의 영향을 줄여 본 대표적인 20영업일 성과입니다.
-- **평균 5D / 10D / 20D / 60D**: 신호 이후 각 기간 평균 수익률입니다.
-- **평균 MDD20**: 신호 이후 20영업일 동안 겪은 평균 최대 하락폭입니다. 예: -6%면 중간에 평균 약 6%의 최대 낙폭을 경험했다는 뜻입니다.
-                    """)
-                if (summary["Independent"]<5).any(): st.warning("독립 신호가 5개 미만인 Setup이 있어 표본 신뢰도가 낮을 수 있습니다. Threshold를 낮춰 표본을 늘리거나 더 긴 과거 데이터를 확보해 비교하세요.")
-                st.caption("과거 성과가 미래 성과를 보장하지 않습니다. 평균 수익률은 극단적 상승 사례에 민감하므로 중앙값·독립 신호 수·MDD를 함께 확인하세요.")
-                with st.expander("Calibration 원자료"):
-                    st.dataframe(detail.tail(250),hide_index=True,use_container_width=True)
-        except Exception as exc: st.error(f"Calibration 실패: {exc}")
+            with st.spinner("과거 각 거래일의 눌림목·모멘텀 Setup을 재구성하는 중입니다..."):
+                detail, summary = run_setup_calibration(a["frame"], a["benchmark"], float(threshold))
+            st.session_state[cache_key] = (detail, summary)
+        except Exception as exc:
+            st.error(f"과거 진입 검증 실패: {exc}")
+
+    result = st.session_state.get(cache_key)
+    if not result:
+        st.info("위의 기준점수를 확인한 뒤 **과거 진입 검증 실행**을 누르면 이 종목의 눌림목·모멘텀 과거 성향과 현재 신호의 정합성을 보여줍니다.")
+        return
+
+    detail, summary = result
+    if summary.empty:
+        st.info("현재 기준에서는 충분한 과거 검증 결과가 없습니다. 기준점수를 조금 낮추거나 더 긴 가격 이력이 확보된 종목에서 다시 확인해 보세요.")
+        return
+
+    if not detail.empty:
+        st.caption(f"검증 구간 · {detail['date'].iloc[0]} ~ {detail['date'].iloc[-1]} · 공통 기준 {threshold}점 · 이후 성과 통계는 중복 신호를 줄인 독립 사례 기준")
+
+    st.markdown("<div class='v6-section'></div>", unsafe_allow_html=True)
+    st.subheader("3. 이 종목의 과거 Entry 성향")
+    style_name, style_cls, style_text = _calibration_style(summary)
+    st.markdown(
+        f"<div class='cal-style'><div class='v6-kicker'>HISTORICAL ENTRY STYLE</div>"
+        f"<h3 class='{style_cls}'>{style_name}</h3><div class='v6-sub'>{style_text}</div></div>",
+        unsafe_allow_html=True,
+    )
+
+    st.subheader("4. 진입 방식별 과거 검증")
+    p_row, m_row = _cal_row(summary, "Pullback"), _cal_row(summary, "Momentum")
+    cards = st.columns(2)
+    for col, row, setup_name, title in [
+        (cards[0], p_row, "Pullback", "🎯 눌림목 진입 (Pullback)"),
+        (cards[1], m_row, "Momentum", "🚀 모멘텀 진입 (Momentum)"),
+    ]:
+        with col:
+            if row is None:
+                st.markdown(f"<div class='cal-strategy'><div class='v6-kicker'>{title}</div><div class='v6-sub'>검증 자료가 없습니다.</div></div>", unsafe_allow_html=True)
+                continue
+            n = int(row.get("Independent", 0))
+            pos = int(row.get("Positive 20D", 0))
+            hit = _safe_num(row, "Hit 20D")
+            med = _safe_num(row, "Median 20D")
+            avg = _safe_num(row, "Avg 20D")
+            mdd = _safe_num(row, "Avg MDD20")
+            tone, explanation = _strategy_validation_text(row, setup_name)
+            hit_text = f"{pos} / {n} ({hit:.0f}%)" if n and np.isfinite(hit) else "—"
+            med_text = f"{med:+.1f}%" if np.isfinite(med) else "—"
+            avg_text = f"{avg:+.1f}%" if np.isfinite(avg) else "—"
+            mdd_text = f"{mdd:.1f}%" if np.isfinite(mdd) else "—"
+            st.markdown(
+                f"<div class='cal-strategy'><div class='v6-kicker'>{title}</div>"
+                f"<div style='font-weight:900;color:#f8fafc'>{tone}</div>"
+                f"<div class='cal-stat-grid'>"
+                f"<div class='cal-stat'><div class='k'>독립 사례</div><div class='v'>{n}회</div></div>"
+                f"<div class='cal-stat'><div class='k'>20일 후 상승 사례</div><div class='v'>{hit_text}</div></div>"
+                f"<div class='cal-stat'><div class='k'>대표 수익률 · 20D Median</div><div class='v'>{med_text}</div></div>"
+                f"<div class='cal-stat'><div class='k'>평균 수익률 · 20D Average</div><div class='v'>{avg_text}</div></div>"
+                f"<div class='cal-stat'><div class='k'>평균 최대 하락폭 · MDD20</div><div class='v'>{mdd_text}</div></div>"
+                f"<div class='cal-stat'><div class='k'>기준 이상 거래일</div><div class='v'>{int(row.get('Signals', 0))}일</div></div>"
+                f"</div><div class='v6-sub'>{explanation}</div></div>",
+                unsafe_allow_html=True,
+            )
+
+    st.markdown("<div class='v6-section'></div>", unsafe_allow_html=True)
+    st.subheader("5. 현재 신호 × 과거 검증")
+    preferred = setups.preferred
+    if preferred == "Pullback Preferred":
+        align_name, align_cls, align_text = _historical_alignment("Pullback", pull.score, threshold, p_row)
+    elif preferred == "Momentum Preferred":
+        align_name, align_cls, align_text = _historical_alignment("Momentum", mom.score, threshold, m_row)
+    elif preferred == "Both Valid":
+        p_align = _historical_alignment("Pullback", pull.score, threshold, p_row)
+        m_align = _historical_alignment("Momentum", mom.score, threshold, m_row)
+        if p_align[0] == "높음" and m_align[0] == "높음":
+            align_name, align_cls = "높음", "status-green"
+        elif "낮음" in (p_align[0], m_align[0]):
+            align_name, align_cls = "혼조", "status-yellow"
+        else:
+            align_name, align_cls = "보통", "status-teal"
+        align_text = f"눌림목: {p_align[2]} 모멘텀: {m_align[2]}"
+    else:
+        if pull.score >= mom.score:
+            align_name, align_cls, align_text = _historical_alignment("Pullback", pull.score, threshold, p_row)
+        else:
+            align_name, align_cls, align_text = _historical_alignment("Momentum", mom.score, threshold, m_row)
+        if max(pull.score, mom.score) < threshold:
+            align_name, align_cls = "아직 확인 필요", "status-yellow"
+
+    st.markdown(
+        f"<div class='cal-compare'><div class='v6-kicker'>CURRENT × HISTORICAL VALIDATION</div>"
+        f"<b>현재 우선 방식</b> · {current_view['approach']}<br>"
+        f"<b>과거 정합성</b> · <span class='{align_cls}'>{align_name}</span><br><br>{align_text}<br><br>"
+        f"<span class='v6-sub'>과거 정합성이 높다는 것은 비슷한 강도의 과거 Setup이 상대적으로 잘 작동했다는 뜻이지, 향후 상승 확률이나 예상 수익률을 의미하지 않습니다.</span></div>",
+        unsafe_allow_html=True,
+    )
+
+    with st.expander("기간별 상세 통계 보기"):
+        shown = summary.rename(columns={
+            "Setup": "진입 방식",
+            "Signals": "기준 이상 거래일",
+            "Independent": "독립 사례",
+            "Positive 20D": "20일 후 상승 사례",
+            "Hit 20D": "20일 후 상승 비율",
+            "Median 20D": "대표 수익률 20D",
+            "Avg 5D": "평균 5D",
+            "Avg 10D": "평균 10D",
+            "Avg 20D": "평균 20D",
+            "Avg 60D": "평균 60D",
+            "Avg MDD20": "평균 최대 하락폭 20D",
+        }).copy()
+        shown["진입 방식"] = shown["진입 방식"].map({"Pullback": "눌림목 진입 (Pullback)", "Momentum": "모멘텀 진입 (Momentum)"}).fillna(shown["진입 방식"])
+        fmt = {
+            "20일 후 상승 비율": "{:.1f}%",
+            "대표 수익률 20D": "{:+.2f}%",
+            "평균 5D": "{:+.2f}%",
+            "평균 10D": "{:+.2f}%",
+            "평균 20D": "{:+.2f}%",
+            "평균 60D": "{:+.2f}%",
+            "평균 최대 하락폭 20D": "{:+.2f}%",
+        }
+        st.dataframe(shown.style.format(fmt, na_rep="—"), hide_index=True, use_container_width=True)
+        st.markdown("""
+**쉽게 읽는 법**
+- **독립 사례**: 같은 눌림목이나 돌파가 며칠 연속 점수를 넘은 경우를 중복해서 세지 않도록 약 5영업일 간격으로 추린 사례입니다. 메인 해석은 이 독립 사례를 기준으로 계산합니다.
+- **20일 후 상승 비율**: 독립 사례 중 20영업일 뒤 주가가 신호 발생일보다 높았던 비율입니다. 미래 상승확률을 뜻하지 않습니다.
+- **대표 수익률 (Median)**: 독립 사례들의 수익률을 순서대로 세웠을 때 가운데 값입니다. 몇 번의 큰 급등·급락 영향이 적어 **'보통 사례가 어느 정도였는가'**를 볼 때 유용합니다.
+- **평균 수익률 (Average)**: 모든 독립 사례의 수익률을 더해 나눈 값입니다. 큰 급등 한두 번이 있으면 대표 수익률보다 높아질 수 있습니다.
+- **평균 최대 하락폭 (MDD20)**: 진입 후 20영업일 동안 중간에 얼마나 크게 밀렸는지를 평균낸 값입니다. 0에 가까울수록 진입 후 흔들림이 작았다는 뜻입니다.
+        """)
+        if (summary["Independent"] < 5).any():
+            st.warning("독립 사례가 5개 미만인 진입 방식이 있습니다. 해당 결과는 참고 수준으로만 보고 기준을 낮추거나 더 긴 데이터가 확보된 뒤 다시 비교하는 편이 좋습니다.")
+
+    with st.expander("과거 검증 원자료 보기"):
+        st.dataframe(detail.tail(250), hide_index=True, use_container_width=True)
+        st.caption("원자료의 pullback/momentum은 과거 각 거래일에서 재계산한 Entry 점수이며, fwd_5d~60d는 이후 실제 가격 수익률입니다. Calibration은 과거 시장 국면을 중립으로 고정한 가격 기반 검증입니다.")
+
+    st.caption("과거 결과는 미래 성과를 보장하지 않습니다. Calibration은 현재 Entry Engine을 보조하는 Historical Validation Layer로 사용하고, 현재 시장환경·Risk·옵션·기업 품질과 함께 해석하세요.")
 
 
 # -------------------- App shell --------------------
 st.title("Stock Analyzer by Kijungnam")
-st.caption("V6.0.4 · MULTI-LENS SETUP & DECISION SYSTEM · Decision Summary & Consensus")
+st.caption("V6.0.7 · MULTI-LENS SETUP & DECISION SYSTEM · Decision Summary & Consensus")
 
 with st.expander("🔥 V6 종목 스캐너 · 시장 전체 후보 찾기", expanded=False):
     render_scanner_section()
@@ -1550,13 +1810,13 @@ symbol=st.session_state.get("symbol","")
 if symbol:
     st.caption(f"현재 선택 종목 · {info(symbol).get('longName') or info(symbol).get('shortName') or symbol} · {symbol}")
 
-mode=st.radio("개별 분석 메뉴",["📊 종합분석","🎯 퀀트분석","🧩 옵션분석","🌎 시장환경","🧪 Calibration","💾 History"],horizontal=True,label_visibility="collapsed")
+mode=st.radio("개별 분석 메뉴",["📊 종합분석","🎯 퀀트분석","🧩 옵션분석","🌎 시장환경","🧪 과거 진입 검증","💾 History"],horizontal=True,label_visibility="collapsed")
 st.divider()
 
 analysis=None
-if symbol and mode in ("📊 종합분석","🎯 퀀트분석","🧩 옵션분석","🧪 Calibration"):
+if symbol and mode in ("📊 종합분석","🎯 퀀트분석","🧩 옵션분석","🧪 과거 진입 검증"):
     try:
-        with st.spinner(f"{symbol} · V6.0.4 엔진을 계산하는 중입니다..."): analysis=build_full_analysis(symbol)
+        with st.spinner(f"{symbol} · V6.0.7 엔진을 계산하는 중입니다..."): analysis=build_full_analysis(symbol)
     except Exception as exc: st.error(f"분석을 계산하지 못했습니다: {exc}")
 
 if mode=="📊 종합분석":
@@ -1580,8 +1840,8 @@ elif mode=="🧩 옵션분석":
 
 elif mode=="🌎 시장환경": render_market_dashboard()
 
-elif mode=="🧪 Calibration":
-    if not symbol or not analysis: st.info("먼저 종목을 검색한 뒤 Calibration을 실행해 주세요.")
+elif mode=="🧪 과거 진입 검증":
+    if not symbol or not analysis: st.info("먼저 종목을 검색한 뒤 과거 진입 검증을 실행해 주세요.")
     else: render_calibration(analysis,symbol)
 
 elif mode=="💾 History":

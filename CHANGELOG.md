@@ -1,5 +1,15 @@
 # Changelog
 
+## V6.0.7
+- Renamed Calibration to **과거 진입 검증 (Entry Calibration)** and reorganized it around current-entry validation.
+- Pulls the current Pullback / Momentum scores and readiness directly from the main analysis.
+- Clarifies that the shared threshold selects historical validation cases and does not modify the current Entry score.
+- Adds historical Entry style classification: Pullback-oriented, Momentum-oriented, mixed, or insufficient data.
+- Adds plain-language strategy cards with independent cases, 20D positive cases, median/average return, and MDD.
+- Adds Current × Historical Validation alignment interpretation.
+- Uses spaced independent signal observations for headline performance statistics to reduce multi-day signal duplication.
+- Moves detailed 5D/10D/20D/60D statistics and raw rows into expandable sections.
+
 ## V6.0.6
 - Separated preferred entry approach from actual entry readiness.
 - Added a four-part Entry Decision summary: Pullback score, Momentum score, preferred approach, and current readiness.

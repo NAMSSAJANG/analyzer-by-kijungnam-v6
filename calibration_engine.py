@@ -10,19 +10,23 @@ from sr_engine import build_zones
 from technical_engine import build_technical_snapshot
 
 
-def _independent_signal_count(mask: pd.Series, min_gap: int = 5) -> int:
-    """Collapse clustered daily signals into episodes separated by min_gap rows."""
+def _independent_signal_indices(mask: pd.Series, min_gap: int = 5) -> list[int]:
+    """Return spaced signal rows so one multi-day setup does not dominate validation."""
     indexes = np.flatnonzero(mask.to_numpy(dtype=bool))
     if len(indexes) == 0:
-        return 0
-    count = 1
-    last = int(indexes[0])
+        return []
+    selected = [int(indexes[0])]
+    last = selected[0]
     for idx in indexes[1:]:
         idx = int(idx)
         if idx - last >= min_gap:
-            count += 1
+            selected.append(idx)
             last = idx
-    return count
+    return selected
+
+
+def _independent_signal_count(mask: pd.Series, min_gap: int = 5) -> int:
+    return len(_independent_signal_indices(mask, min_gap=min_gap))
 
 
 def run_setup_calibration(
@@ -86,21 +90,26 @@ def run_setup_calibration(
     summary_rows = []
     for name, col in (("Pullback", "pullback"), ("Momentum", "momentum")):
         mask = detail[col] >= threshold
-        sig = detail.loc[mask]
-        independent = _independent_signal_count(mask, min_gap=5)
-        if sig.empty:
+        daily_sig = detail.loc[mask]
+        independent_positions = _independent_signal_indices(mask, min_gap=5)
+        sig = detail.iloc[independent_positions] if independent_positions else detail.iloc[0:0]
+        independent = len(sig)
+        if daily_sig.empty or sig.empty:
             summary_rows.append({
-                "Setup": name, "Signals": 0, "Independent": 0,
-                "Hit 20D": np.nan, "Median 20D": np.nan,
+                "Setup": name, "Signals": int(len(daily_sig)), "Independent": 0,
+                "Positive 20D": 0, "Hit 20D": np.nan, "Median 20D": np.nan,
                 "Avg 5D": np.nan, "Avg 10D": np.nan, "Avg 20D": np.nan,
                 "Avg 60D": np.nan, "Avg MDD20": np.nan,
             })
             continue
+        valid20 = sig["fwd_20d"].dropna()
+        positive20 = int((valid20 > 0).sum())
         summary_rows.append({
             "Setup": name,
-            "Signals": int(len(sig)),
+            "Signals": int(len(daily_sig)),
             "Independent": int(independent),
-            "Hit 20D": float((sig["fwd_20d"] > 0).mean() * 100),
+            "Positive 20D": positive20,
+            "Hit 20D": float((valid20 > 0).mean() * 100) if len(valid20) else np.nan,
             "Median 20D": float(sig["fwd_20d"].median()),
             "Avg 5D": float(sig["fwd_5d"].mean()),
             "Avg 10D": float(sig["fwd_10d"].mean()),

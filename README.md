@@ -13,7 +13,7 @@ A Streamlit-based stock analysis tool for evaluating company quality, trend, mom
 - Risk & Support / Resistance
 - Options Analysis
 - Setup Scanner
-- Score History & Calibration
+- Score History & Historical Entry Validation
 
 ## Run
 
