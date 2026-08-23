@@ -29,7 +29,7 @@ from setup_engine import build_setups
 from sr_engine import build_zones
 from technical_engine import build_technical_snapshot
 
-st.set_page_config(page_title="Stock Analyzer V6.0.2", page_icon="📈", layout="wide")
+st.set_page_config(page_title="Stock Analyzer V6.0.3", page_icon="📈", layout="wide")
 
 DB_FILE = Path(os.getenv("ANALYZER_DB_FILE", ".data/stock_analyzer_v6.sqlite"))
 HISTORY = SQLiteHistoryStore(DB_FILE)
@@ -67,13 +67,33 @@ RATE_GUIDE = {
 }
 
 SERIES_STYLE = {
-    "Opportunity": ("종목 매력도", "#6366f1", "top center"),
-    "Pullback": ("눌림목 진입", "#ff6b45", "bottom center"),
-    "Momentum Entry": ("모멘텀 진입", "#14d6a0", "middle right"),
-    "Quant": ("퀀트 종합", "#6366f1", "top center"),
-    "Trend": ("추세", "#ff6b45", "top center"),
-    "Momentum": ("모멘텀", "#14d6a0", "bottom center"),
-    "Market Regime": ("시장 국면", "#fbbf24", "top center"),
+    "Opportunity": ("종목 매력도 (Opportunity)", "#6366f1", "top center"),
+    "Pullback": ("눌림목 진입 (Pullback Entry)", "#ff6b45", "bottom center"),
+    "Momentum Entry": ("모멘텀 진입 (Momentum Entry)", "#14d6a0", "top center"),
+    "Quant": ("퀀트 종합 (Quant Composite)", "#6366f1", "top center"),
+    "Trend": ("추세 (Trend)", "#ff6b45", "top center"),
+    "Momentum": ("모멘텀 (Momentum)", "#14d6a0", "bottom center"),
+    "Market Regime": ("시장 국면 (Market Regime)", "#fbbf24", "top center"),
+}
+
+COMPANY_FACTOR_LABELS = {
+    "Growth": "성장성 (Growth)",
+    "Profitability": "수익성 (Profitability)",
+    "Balance Sheet": "재무건전성 (Balance Sheet)",
+    "Cash Flow": "현금흐름 (Cash Flow)",
+    "Valuation": "가치평가 (Valuation)",
+}
+
+AUX_LABELS = {
+    "평균회귀": "평균회귀",
+    "모멘텀": "모멘텀 (Momentum)",
+    "다중 시간대": "다중 시간대",
+    "낙폭 위치": "낙폭 위치",
+    "수급 흐름": "수급 흐름 (Demand)",
+    "Target Price Factor": "상단 여유도 (Target Price Factor)",
+    "통계적 Z-Score": "통계적 Z-Score",
+    "Relative Strength": "상대강도 (Relative Strength)",
+    "Extension Balance": "가격 확장 균형 (Extension Balance)",
 }
 
 MARKET_LABEL_KO = {
@@ -111,15 +131,15 @@ st.markdown("""
 h1,h2,h3{letter-spacing:-.025em}
 .v6-section{height:1px;margin:46px 0 20px}
 .v6-card{box-sizing:border-box;border:1px solid #29415e;border-radius:16px;padding:19px;background:#0d1b2d;height:100%;min-height:176px;margin-bottom:18px}
-.v6-card.compact{min-height:176px}.v6-card.risk{height:210px;min-height:210px}.v6-card.entry{height:176px;min-height:176px;margin-bottom:18px}
+.v6-card.compact{height:214px;min-height:214px;overflow:auto}.v6-card.risk{height:220px;min-height:220px}.v6-card.entry{height:198px;min-height:198px;margin-bottom:20px}
 .v6-kicker{font-size:.72rem;font-weight:850;letter-spacing:.14em;color:#38bdf8;margin-bottom:9px}
 .v6-value{font-size:2rem;font-weight:900;color:#f8fafc;line-height:1.15;margin:4px 0 8px}.v6-sub{color:#94a3b8;line-height:1.65;font-size:.88rem}
 .v6-pill{display:inline-block;border-radius:99px;padding:4px 9px;background:#102c46;color:#7dd3fc;font-weight:750;margin:3px 4px 3px 0}
 .decision{border:1px solid #315272;border-radius:18px;padding:22px;background:linear-gradient(135deg,#0d1b2d,#10243a);margin:15px 0 24px}
 .decision h2{margin:.2rem 0 .8rem}.decision p{color:#dbeafe;line-height:1.78;margin:.42rem 0}
-.brief-card{box-sizing:border-box;border:1px solid #29415e;border-radius:15px;padding:20px;background:#0d1b2d;height:238px;min-height:238px;color:#dbeafe;margin-bottom:18px;overflow:auto}
+.brief-card{box-sizing:border-box;border:1px solid #29415e;border-radius:15px;padding:21px;background:#0d1b2d;height:286px;min-height:286px;color:#dbeafe;margin-bottom:22px;overflow:auto}
 .brief-card.wide{height:auto;min-height:180px}.brief-card h3{color:#f8fafc;margin:.1rem 0 1rem;font-size:1.28rem}.brief-card p{line-height:1.78;margin:0;color:#dbeafe}
-.status-green{color:#34d399}.status-yellow{color:#fbbf24}.status-orange{color:#fb923c}.status-red{color:#fb7185}.status-muted{color:#94a3b8}
+.status-green{color:#34d399}.status-teal{color:#2dd4bf}.status-blue{color:#60a5fa}.status-yellow{color:#fbbf24}.status-orange{color:#fb923c}.status-red{color:#fb7185}.status-muted{color:#94a3b8}
 .zone{border-left:4px solid #38bdf8;background:#0d1b2d;border-radius:10px;padding:13px;margin:7px 0}.zone.r{border-left-color:#fb7185}
 .explain{box-sizing:border-box;border:1px solid #29415e;border-radius:14px;padding:16px 18px;background:#0a1728;color:#cbd5e1;line-height:1.72;height:132px;min-height:132px;margin-bottom:18px}
 .indicator-row{border:1px solid #29415e;border-left:3px solid #64748b;border-radius:11px;padding:13px 15px;margin:9px 0;background:#0d1b2d;display:flex;justify-content:space-between;gap:20px;align-items:center}
@@ -128,6 +148,8 @@ h1,h2,h3{letter-spacing:-.025em}
 .pulse-shell{box-sizing:border-box;border:1px solid #29415e;border-radius:13px;padding:14px;background:#0d1b2d;min-height:174px;margin-bottom:10px}
 .pulse-head{display:flex;justify-content:space-between;gap:8px;align-items:baseline}.pulse-head b{color:#f8fafc}.pulse-up{color:#34d399}.pulse-down{color:#fb7185}
 .cal-help{border:1px solid #315272;background:#0d1b2d;border-radius:14px;padding:15px 17px;line-height:1.72;color:#cbd5e1;margin:8px 0 15px}
+.delta-card{box-sizing:border-box;border:1px solid #29415e;border-radius:12px;padding:12px 14px;background:#0d1b2d;min-height:92px;margin:4px 0 14px}.delta-label{color:#94a3b8;font-size:.78rem;font-weight:800;line-height:1.4}.delta-value{font-size:1.22rem;font-weight:900;margin-top:6px}.delta-change{font-size:.83rem;font-weight:800;margin-left:7px}
+.risk-summary{border:1px solid #29415e;border-radius:12px;padding:13px 16px;background:#0a1728;margin:4px 0 10px;color:#cbd5e1;line-height:1.65}
 [data-testid="stMetricValue"]{font-size:clamp(1.4rem,2.5vw,2.1rem)}
 [data-testid="stDataFrame"]{border:1px solid #29415e;border-radius:10px;overflow:hidden}
 div[data-testid="stHorizontalBlock"]{gap:1.15rem;align-items:stretch}
@@ -175,6 +197,64 @@ def status_class(text: str) -> str:
     return "status-red"
 
 
+def entry_status_class(setup) -> str:
+    """User-facing color hierarchy for entry readiness."""
+    status = str(setup.status).upper()
+    if status in ("READY", "CONFIRMED"):
+        return "status-green"
+    if status in ("DEVELOPING", "EARLY BREAKOUT"):
+        return "status-teal"
+    if status in ("WATCH", "NOT IN ZONE"):
+        return "status-yellow"
+    if status in ("EXTENDED", "STRUCTURE WARNING"):
+        return "status-orange"
+    return "status-red"
+
+
+def entry_status_note(setup) -> str:
+    status = str(setup.status).upper()
+    notes = {
+        "READY": "가격·지지 조건이 우호적이어서 실제 진입 후보로 검토할 수 있는 단계입니다.",
+        "DEVELOPING": "조건이 상당 부분 형성됐지만 지지 반응이나 가격 안정 확인이 한 번 더 필요합니다.",
+        "NOT IN ZONE": "상승 구조는 유지될 수 있지만 현재 가격이 눌림목 진입 구간과는 거리가 있습니다.",
+        "STRUCTURE WARNING": "눌림목의 질이 약해져 지지 회복을 먼저 확인하는 편이 좋습니다.",
+        "CONFIRMED": "돌파·추세·수급 조건이 함께 확인되어 모멘텀 진입 후보로 볼 수 있습니다.",
+        "EARLY BREAKOUT": "초기 돌파 신호가 나타났지만 거래량과 돌파 가격 유지 여부를 더 확인해야 합니다.",
+        "WATCH": "아직 돌파 강도가 충분하지 않아 저항 돌파와 거래량 증가를 기다리는 단계입니다.",
+        "EXTENDED": "상승 흐름은 강하지만 가격 확장이 커 신규 진입은 작은 비중이나 재지지를 우선합니다.",
+        "FAILED BREAKOUT": "돌파 구조가 약해져 신규 진입보다 가격 구조 회복을 먼저 확인해야 합니다.",
+    }
+    return notes.get(status, "현재 진입 조건을 지지·거래량·시장환경과 함께 확인합니다.")
+
+
+def risk_item_class(kind: str, raw_state: str) -> str:
+    state = str(raw_state)
+    upper = state.upper()
+    if kind == "liquidity":
+        if upper.startswith("HIGH"): return "status-green"
+        if upper.startswith("NORMAL"): return "status-teal"
+        if upper.startswith("THIN"): return "status-orange"
+        return "status-red"
+    if kind == "earnings":
+        if upper.startswith("NORMAL") or upper.startswith("UNKNOWN"): return "status-green"
+        if upper.startswith("UPCOMING"): return "status-yellow"
+        if upper.startswith("EARNINGS SOON"): return "status-orange"
+        return "status-red"
+    if kind == "market":
+        if upper.startswith("LOW"): return "status-green"
+        if upper.startswith("MODERATE"): return "status-yellow"
+        return "status-red"
+    if upper.startswith("LOW") or upper.startswith("NORMAL"):
+        return "status-green"
+    if upper.startswith("ELEVATED"):
+        return "status-orange"
+    if upper.startswith("HIGH"):
+        return "status-orange"
+    if upper.startswith("EXTREME"):
+        return "status-red"
+    return "status-muted"
+
+
 PULLBACK_STATUS = {
     "READY": "진입 유리",
     "DEVELOPING": "진입 검토",
@@ -189,10 +269,10 @@ MOMENTUM_STATUS = {
     "FAILED BREAKOUT": "진입 보류 · 돌파 실패",
 }
 PREFERRED_STATUS = {
-    "Momentum Preferred": "Momentum 우세",
-    "Pullback Preferred": "Pullback 우세",
-    "Both Valid": "두 Setup 모두 유효",
-    "No Clear Setup": "명확한 Setup 없음",
+    "Momentum Preferred": "모멘텀 진입 우세 (Momentum Preferred)",
+    "Pullback Preferred": "눌림목 진입 우세 (Pullback Preferred)",
+    "Both Valid": "두 진입 방식 모두 유효 (Both Valid)",
+    "No Clear Setup": "명확한 진입 방식 없음 (No Clear Setup)",
 }
 
 
@@ -506,6 +586,63 @@ def reconstructed_trajectory(a: dict, count: int = 10) -> pd.DataFrame:
     return pd.DataFrame(rows).tail(count).reset_index(drop=True)
 
 
+def _five_day_delta(values: pd.Series) -> tuple[float | None, float | None]:
+    clean = pd.to_numeric(values, errors="coerce").dropna()
+    if clean.empty:
+        return None, None
+    current = float(clean.iloc[-1])
+    if len(clean) < 2:
+        return current, None
+    start_value = float(clean.iloc[-5] if len(clean) >= 5 else clean.iloc[0])
+    return current, current - start_value
+
+
+def _render_trajectory_summary(plot: pd.DataFrame, columns: list[str]) -> None:
+    valid_cols = [c for c in columns if c in plot]
+    if not valid_cols:
+        return
+    cols = st.columns(len(valid_cols))
+    for slot, key_name in zip(cols, valid_cols):
+        display, color, _ = SERIES_STYLE.get(key_name, (key_name, "#cbd5e1", "top center"))
+        current, delta = _five_day_delta(plot[key_name])
+        if current is None:
+            current_text, delta_text, delta_color = "N/A", "5D N/A", "#94a3b8"
+        else:
+            current_text = f"{current:.1f}"
+            if delta is None:
+                delta_text, delta_color = "5D N/A", "#94a3b8"
+            else:
+                arrow = "▲" if delta > 0.05 else "▼" if delta < -0.05 else "—"
+                delta_text = f"{arrow} {delta:+.1f} / 5D"
+                delta_color = "#34d399" if delta > .05 else "#fb7185" if delta < -.05 else "#94a3b8"
+        with slot:
+            st.markdown(
+                f"<div class='delta-card'><div class='delta-label'>{display}</div>"
+                f"<div class='delta-value' style='color:{color}'>{current_text}"
+                f"<span class='delta-change' style='color:{delta_color}'>{delta_text}</span></div></div>",
+                unsafe_allow_html=True,
+            )
+
+
+def _annotation_shifts(values_by_series: dict[str, float]) -> dict[str, int]:
+    """Place labels away from their own marker/line and from nearby series."""
+    valid = [(name, value) for name, value in values_by_series.items() if np.isfinite(value)]
+    if not valid:
+        return {}
+    ordered = sorted(valid, key=lambda item: item[1])
+    if len(ordered) == 1:
+        return {ordered[0][0]: 20}
+    if len(ordered) == 2:
+        return {ordered[0][0]: -22, ordered[1][0]: 22}
+    shifts = {ordered[0][0]: -22, ordered[-1][0]: 22}
+    for idx in range(1, len(ordered) - 1):
+        name, value = ordered[idx]
+        lower_gap = value - ordered[idx - 1][1]
+        upper_gap = ordered[idx + 1][1] - value
+        shifts[name] = 24 if upper_gap >= lower_gap else -24
+    return shifts
+
+
 def trajectory_chart(frame: pd.DataFrame, columns: list[str], key: str, title: str):
     if frame.empty or len(frame) < 2:
         st.info("최근 거래일 변화 차트를 계산할 데이터가 충분하지 않습니다.")
@@ -516,39 +653,59 @@ def trajectory_chart(frame: pd.DataFrame, columns: list[str], key: str, title: s
     if len(plot) < 10:
         st.caption(f"현재 계산 가능한 실제 거래일은 {len(plot)}개입니다. 데이터가 확보되면 최대 10영업일을 표시합니다.")
 
+    _render_trajectory_summary(plot, columns)
+
     x = list(range(len(plot)))
     ticktext = [pd.Timestamp(v).strftime("%m.%d") for v in plot["date"]]
     fig = go.Figure()
+    series_values: dict[str, pd.Series] = {}
 
     for col in columns:
         if col not in plot:
             continue
-        display, color, text_position = SERIES_STYLE.get(col, (col, "#cbd5e1", "top center"))
+        display, color, _ = SERIES_STYLE.get(col, (col, "#cbd5e1", "top center"))
         values = pd.to_numeric(plot[col], errors="coerce")
+        series_values[col] = values
         fig.add_trace(go.Scatter(
             x=x,
             y=values,
-            mode="lines+markers+text",
+            mode="lines+markers",
             name=display,
             line=dict(width=2.7, color=color, shape="spline"),
             marker=dict(size=8, color=color, line=dict(width=1.3, color="#07111f")),
-            text=[f"{v:.0f}" if np.isfinite(v) else "" for v in values],
-            textposition=text_position,
-            textfont=dict(color=color, size=12),
             cliponaxis=False,
-            hovertemplate=f"{display}<br>%{{y:.1f}}점<extra></extra>",
+            customdata=ticktext,
+            hovertemplate=f"{display}<br>%{{customdata}} · %{{y:.1f}}점<extra></extra>",
         ))
 
+    # Numeric labels are annotations rather than trace text so they never sit on
+    # top of the marker/line.  The vertical shift is recalculated per trading day
+    # according to the relative position of each series.
+    for i in x:
+        values_now = {name: float(values.iloc[i]) for name, values in series_values.items() if i < len(values) and np.isfinite(values.iloc[i])}
+        shifts = _annotation_shifts(values_now)
+        for series_name, value in values_now.items():
+            display, color, _ = SERIES_STYLE.get(series_name, (series_name, "#cbd5e1", "top center"))
+            fig.add_annotation(
+                x=i, y=value, text=f"{value:.0f}", showarrow=False,
+                yshift=shifts.get(series_name, 20),
+                font=dict(color=color, size=11),
+                bgcolor="rgba(7,17,31,.82)",
+                borderpad=1.5,
+            )
+
     fig.update_layout(
-        height=310,
-        margin=dict(l=22, r=28, t=34, b=42),
+        height=350,
+        margin=dict(l=22, r=28, t=36, b=46),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="#0a1728",
         font=dict(color="#cbd5e1"),
-        legend=dict(orientation="h", y=1.16),
-        yaxis=dict(range=[0, 104], gridcolor="#20344d", fixedrange=True),
+        legend=dict(orientation="h", y=1.12),
+        yaxis=dict(range=[-4, 108], gridcolor="rgba(148,163,184,.22)", fixedrange=True, zeroline=False),
         xaxis=dict(
-            gridcolor="#20344d",
+            showgrid=True,
+            gridcolor="rgba(148,163,184,.14)",
+            gridwidth=1,
             fixedrange=True,
             tickmode="array",
             tickvals=x,
@@ -559,42 +716,59 @@ def trajectory_chart(frame: pd.DataFrame, columns: list[str], key: str, title: s
         ),
     )
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False}, key=key)
-    st.caption("최근 실제 거래일 기준 참고 차트 · 현재 Company Quality와 시장 국면을 고정하고 각 거래일의 가격·거래량·기술 구조를 재계산합니다.")
-
+    st.caption("최근 실제 거래일 기준 참고 차트 · 현재 기업 품질과 시장 국면을 고정하고 각 거래일의 가격·거래량·기술 구조를 재계산합니다. 상단 요약은 최근 5개 거래일의 첫 값과 현재 값 차이입니다.")
 
 def build_briefings(a: dict) -> dict[str, str]:
     tech, company, market, risk, setups, opp = a["tech"], a["company"], a["market"], a["risk"], a["setups"], a["opportunity"]
     q = a["quant"]
-    company_text = (
-        f"Company Quality는 {company.score:.0f}점이며 데이터 커버리지는 {company.coverage*100:.0f}%입니다. " if company.score is not None
-        else "Company Quality는 공개 데이터 부족으로 제한적으로 계산됐습니다. "
-    )
-    strongest = max(((k,v) for k,v in company.factors.items() if v is not None), key=lambda x:x[1], default=("N/A",0))
-    weakest = min(((k,v) for k,v in company.factors.items() if v is not None), key=lambda x:x[1], default=("N/A",0))
-    company_text += f"현재 강점은 {strongest[0]}({strongest[1]:.0f}), 상대적으로 확인이 필요한 축은 {weakest[0]}({weakest[1]:.0f})입니다. 결측값은 0점으로 간주하지 않고 제외·재가중합니다."
 
-    quant_text = (
-        f"Quant Composite는 {q['score']:.0f}점입니다. Trend {tech.trend:.0f}, Momentum {tech.momentum:.0f}, "
-        f"Relative Strength {tech.relative_strength:.0f}, Demand {tech.demand:.0f}입니다. RSI {tech.rsi:.1f}, "
-        f"거래량 {tech.volume_ratio:.2f}배를 함께 보면 {'가격 리더십이 강합니다.' if tech.trend>=75 else '추세 확인이 더 필요합니다.'}"
+    factor_pairs = [(k, v) for k, v in company.factors.items() if v is not None and np.isfinite(v)]
+    strongest = max(factor_pairs, key=lambda x: x[1], default=("N/A", 0))
+    weakest = min(factor_pairs, key=lambda x: x[1], default=("N/A", 0))
+    strongest_name = COMPANY_FACTOR_LABELS.get(strongest[0], strongest[0])
+    weakest_name = COMPANY_FACTOR_LABELS.get(weakest[0], weakest[0])
+
+    company_text = (
+        f"기업 품질(Company Quality)은 {company.score:.0f}점이고, 현재 불러온 재무 데이터의 커버리지는 {company.coverage*100:.0f}%입니다. "
+        if company.score is not None else
+        "기업 품질은 공개 재무 데이터가 충분하지 않아 제한적으로 계산됐습니다. "
     )
+    company_text += (
+        f"가장 강한 축은 {strongest_name} {strongest[1]:.0f}점, 상대적으로 더 확인할 축은 {weakest_name} {weakest[1]:.0f}점입니다. "
+        "제공되지 않은 재무 항목은 0점으로 처리하지 않고 계산에서 제외한 뒤, 남아 있는 항목의 비중을 다시 맞춥니다. "
+        "동일·유사 업종 비교 데이터가 충분한 경우에는 절대평가와 업종 내 상대평가를 함께 반영합니다."
+    )
+
+    trend_view = "중장기 상승 구조가 강하게 유지되고 있습니다." if tech.trend >= 75 else "중장기 추세는 우호적이지만 추가 확인이 필요합니다." if tech.trend >= 60 else "중장기 추세가 아직 뚜렷하지 않습니다."
+    momentum_view = "최근 상승 추진력도 강합니다." if tech.momentum >= 70 else "모멘텀은 중립권이라 추세에 비해 단기 가속은 제한적입니다." if tech.momentum >= 45 else "단기 모멘텀이 약해 반등·돌파 확인이 필요합니다."
+    demand_view = "거래량과 수급 확인도 우호적입니다." if tech.demand >= 65 else "거래량·수급 확인은 아직 강하지 않습니다." if tech.demand >= 40 else "수급 점수가 낮아 가격 상승을 뒷받침하는 거래량 확인이 부족합니다."
+    rs_view = "시장 대비 가격 리더십이 매우 강합니다." if tech.relative_strength >= 80 else "시장 대비 상대강도는 우호적입니다." if tech.relative_strength >= 60 else "시장 대비 상대강도가 뚜렷하지 않습니다."
+    quant_text = (
+        f"퀀트 종합(Quant Composite)은 {q['score']:.0f}점입니다. 추세 {tech.trend:.0f}점, 모멘텀 {tech.momentum:.0f}점, "
+        f"수급 {tech.demand:.0f}점, 상대강도 {tech.relative_strength:.0f}점으로 구성 상태를 나눠서 봅니다. "
+        f"{trend_view} {momentum_view} {demand_view} 현재 거래량은 20일 평균의 {tech.volume_ratio:.2f}배이고 RSI는 {tech.rsi:.1f}입니다. {rs_view}"
+    )
+
     pull_label, mom_label = setup_status_ko(setups.pullback), setup_status_ko(setups.momentum)
     entry_text = (
-        f"Pullback {setups.pullback.score:.0f}점({pull_label}), Momentum {setups.momentum.score:.0f}점({mom_label})으로 "
-        f"현재 Preferred Setup은 {preferred_ko(setups.preferred)}입니다. {setups.summary} "
-        f"신규 진입 시 무효화선과 거래량 확인을 우선하세요."
+        f"눌림목 진입(Pullback Entry)은 {setups.pullback.score:.0f}점 · {pull_label}, 모멘텀 진입(Momentum Entry)은 {setups.momentum.score:.0f}점 · {mom_label}입니다. "
+        f"현재 우선 진입 방식은 {preferred_ko(setups.preferred)}로 해석합니다. 눌림목 점수는 지지구간·EMA 접근과 조정의 질을, 모멘텀 점수는 돌파·상대강도·거래량 확인을 더 중요하게 봅니다. "
+        f"{setups.summary} 실제 신규 진입에서는 점수만 보지 말고 참고 Zone, Trigger, 무효화선과 거래량 확인을 함께 보세요."
     )
-    market_text = (
-        f"{market_region_ko(market.market)} 시장 국면은 {market.score:.0f}점 · {market_label_ko(market.label)}입니다. 종합 위험도는 {risk.score:.0f}점({risk_ko(risk.level)})이며 "
-        f"가격 확장 {risk.extension}, 변동성 {risk.volatility}, 유동성 {risk.liquidity} 상태입니다. 위험이 높을수록 종목 매력도를 깎기보다 초기 비중을 줄이는 방식으로 해석합니다."
-    )
-    overall_text = (
-        f"종목 매력도는 {opp.score:.0f}점({grade_ko(opp.score)})입니다. {opp.interpretation} "
-        f"현재는 {preferred_ko(setups.preferred)}로 해석되며 위험 수준은 {risk_ko(risk.level)}입니다. "
-        f"좋은 종목과 좋은 매수 가격을 분리해서 보고, Entry Engine의 Setup과 Risk 패널을 함께 확인하는 것이 핵심입니다."
-    )
-    return {"overall":overall_text, "company":company_text, "quant":quant_text, "entry":entry_text, "market":market_text}
 
+    market_text = (
+        f"{market_region_ko(market.market)} 시장 국면(Market Regime)은 {market.score:.0f}점 · {market_label_ko(market.label)}입니다. "
+        f"종합 위험도는 {risk.score:.0f}점 · {risk_ko(risk.level)}이며, 가격 확장 {risk_state_ko(risk.extension)}, 변동성 {risk_state_ko(risk.volatility)}, "
+        f"유동성 {risk_state_ko(risk.liquidity)} 상태입니다. 위험 점수는 좋은 종목을 자동으로 나쁜 종목으로 만들기보다, 신규 진입 비중과 확인 조건을 더 보수적으로 조정하는 데 사용합니다. "
+        "시장 국면이 혼조일 때는 지수 방향보다 종목 자체의 상대강도와 지지 유지가 더 중요해집니다."
+    )
+
+    overall_text = (
+        f"종목 매력도(Opportunity)는 {opp.score:.0f}점 · {grade_ko(opp.score)}입니다. 이 점수는 기업 품질, 추세·리더십, 상대강도, 모멘텀·수급, 시장환경을 합쳐 '관찰할 가치가 높은 종목인가'를 평가하며, 현재 가격이 바로 좋은 매수 가격이라는 뜻은 아닙니다. "
+        f"현재 우선 진입 방식은 {preferred_ko(setups.preferred)}, 위험 수준은 {risk_ko(risk.level)}, 시장 국면은 {market_label_ko(market.label)}입니다. "
+        f"{opp.interpretation} 따라서 종목 매력도와 실제 진입 타이밍을 분리해서 보고, Entry Engine과 Risk Engine의 확인 조건을 함께 읽는 것이 V6의 핵심입니다."
+    )
+    return {"overall": overall_text, "company": company_text, "quant": quant_text, "entry": entry_text, "market": market_text}
 
 def render_ai_briefings(a: dict):
     texts = build_briefings(a)
@@ -612,20 +786,25 @@ def render_ai_briefings(a: dict):
 def render_entry_engine(a: dict):
     setups = a["setups"]
     st.markdown("<div class='v6-section'></div>", unsafe_allow_html=True)
-    st.subheader("Entry Engine V3")
+    st.subheader("Entry Engine V3 · 진입 방식")
     e1, e2 = st.columns(2)
     with e1:
-        st.markdown("<div class='explain'><b>🎯 Pullback Entry · 눌림목 진입</b><br>상승 추세 종목이 EMA·지지 Zone 부근으로 조정받았을 때 가격 메리트와 지지 가능성을 평가합니다. 거래량 감소는 건강한 조정으로 긍정적일 수 있습니다.</div>", unsafe_allow_html=True)
+        st.markdown("<div class='explain'><b>🎯 눌림목 진입 (Pullback Entry)</b><br>상승 구조를 유지한 종목이 EMA·지지구간 부근으로 조정받았는지 평가합니다. 좋은 종목을 더 유리한 가격에서 살 수 있는지, 손절 거리가 합리적인지, 거래량 감소가 건강한 조정인지 확인합니다.</div>", unsafe_allow_html=True)
     with e2:
-        st.markdown("<div class='explain'><b>🚀 Momentum Entry · 추세 추종 진입</b><br>저항 돌파·신고가 접근·상대강도·거래량 확대로 상승 흐름을 따라갈 수 있는지 평가합니다. RSI가 높아도 강한 추세라면 단순 감점하지 않습니다.</div>", unsafe_allow_html=True)
+        st.markdown("<div class='explain'><b>🚀 모멘텀 진입 (Momentum Entry)</b><br>저항 돌파·신고가 접근·상대강도·거래량 증가를 통해 강한 상승 흐름을 따라갈 수 있는지 평가합니다. RSI가 높더라도 강한 추세와 수급이 확인되면 단순 과열로 자동 감점하지 않습니다.</div>", unsafe_allow_html=True)
 
     c1, c2 = st.columns(2)
     for col, setup, icon in ((c1, setups.pullback, "🎯"), (c2, setups.momentum, "🚀")):
         with col:
-            cls = status_class(setup.status)
+            cls = entry_status_class(setup)
             display = setup_status_ko(setup)
-            setup_title = "눌림목 진입" if setup.name == "Pullback" else "모멘텀 진입"
-            st.markdown(f"<div class='v6-card entry'><div class='v6-kicker'>{icon} {setup_title}</div><div class='v6-value'>{setup.score:.1f}</div><div class='{cls}' style='font-size:1.03rem;font-weight:850'>{display}</div></div>", unsafe_allow_html=True)
+            setup_title = "눌림목 진입 (Pullback Entry)" if setup.name == "Pullback" else "모멘텀 진입 (Momentum Entry)"
+            st.markdown(
+                f"<div class='v6-card entry'><div class='v6-kicker'>{icon} {setup_title}</div>"
+                f"<div class='v6-value'>{setup.score:.1f}</div><div class='{cls}' style='font-size:1.05rem;font-weight:900'>{display}</div>"
+                f"<div class='v6-sub' style='margin-top:8px'>{entry_status_note(setup)}</div></div>",
+                unsafe_allow_html=True,
+            )
             factor_map = PULLBACK_FACTOR_KO if setup.name == "Pullback" else MOMENTUM_FACTOR_KO
             rows = [{"요소": factor_map.get(k, k), "점수": round(v,1), "해석": (f"{market_label_ko(a['market'].label)} {a['market'].score:.1f}" if k=="Market" else setup.details[k])} for k,v in setup.factors.items()]
             st.dataframe(
@@ -638,33 +817,50 @@ def render_entry_engine(a: dict):
             invalid = f"Invalidation {money(setup.invalidation)}" if setup.invalidation else "Invalidation · N/A"
             st.caption(f"{zone}  ·  {trigger}  ·  {invalid}")
 
-
 def render_risk_engine(a: dict):
     risk = a["risk"]
     st.markdown("<div class='v6-section'></div>", unsafe_allow_html=True)
     st.subheader("Risk Engine · 위험 점검")
     rcols = st.columns(5)
     items = [
-        ("가격 확장", risk_state_ko(risk.extension), risk.details["Extension"]),
-        ("변동성", risk_state_ko(risk.volatility), risk.details["Volatility"]),
-        ("실적 일정", risk_state_ko(risk.earnings), risk.details["Earnings"]),
-        ("유동성", risk_state_ko(risk.liquidity), risk.details["Liquidity"]),
-        ("시장 위험", risk_state_ko(risk.market), f"{market_label_ko(a['market'].label)} · {a['market'].score:.1f}"),
+        ("가격 확장 (Extension)", "extension", risk.extension, risk_state_ko(risk.extension), risk.details["Extension"]),
+        ("변동성 (Volatility)", "volatility", risk.volatility, risk_state_ko(risk.volatility), risk.details["Volatility"]),
+        ("실적 일정 (Earnings)", "earnings", risk.earnings, risk_state_ko(risk.earnings), risk.details["Earnings"]),
+        ("유동성 (Liquidity)", "liquidity", risk.liquidity, risk_state_ko(risk.liquidity), risk.details["Liquidity"]),
+        ("시장 위험 (Market Risk)", "market", risk.market, risk_state_ko(risk.market), f"{market_label_ko(a['market'].label)} · {a['market'].score:.1f}"),
     ]
-    for col, (label, value, detail) in zip(rcols, items):
+    for col, (label, kind, raw, value, detail) in zip(rcols, items):
         with col:
-            st.markdown(f"<div class='v6-card risk'><div class='v6-kicker'>{label}</div><div style='font-size:1.18rem;font-weight:850;margin:7px 0 8px'>{value}</div><div class='v6-sub'>{detail}</div></div>", unsafe_allow_html=True)
-    st.caption(f"Overall Risk {risk.score:.1f} · {risk_ko(risk.level)} ({risk.level}) · Starter-size multiplier {risk.position_size_multiplier:.2f}x · 위험은 Opportunity를 직접 깎기보다 초기 비중 조정에 사용합니다.")
-
+            cls = risk_item_class(kind, raw)
+            st.markdown(
+                f"<div class='v6-card risk'><div class='v6-kicker'>{label}</div>"
+                f"<div class='{cls}' style='font-size:1.22rem;font-weight:900;margin:7px 0 10px'>{value}</div>"
+                f"<div class='v6-sub'>{detail}</div></div>",
+                unsafe_allow_html=True,
+            )
+    overall_cls = "status-green" if risk.level == "LOW" else "status-yellow" if risk.level == "MODERATE" else "status-orange" if risk.level == "HIGH" else "status-red"
+    st.markdown(
+        f"<div class='risk-summary'><b>종합 위험도</b> · <span class='{overall_cls}'><b>{risk.score:.1f} / 100 · {risk_ko(risk.level)}</b></span> &nbsp; | &nbsp; "
+        f"초기 비중 보정 <b>{risk.position_size_multiplier:.2f}×</b><br>위험은 종목 매력도(Opportunity)를 직접 깎기보다, 신규 진입 비중과 확인 조건을 보수적으로 조정하는 데 사용합니다.</div>",
+        unsafe_allow_html=True,
+    )
 
 def render_company_summary(a: dict):
     company = a["company"]
     st.markdown("<div class='v6-section'></div>", unsafe_allow_html=True)
-    st.subheader("Company Quality V2")
-    if company.notes: st.info(" ".join(company.notes))
+    st.subheader("기업 품질 (Company Quality V2)")
+    st.caption(f"현재 재무 데이터 커버리지 {company.coverage*100:.0f}% · 평가 신뢰도 {company.confidence}. 제공되지 않은 재무 항목은 0점 처리하지 않고 점수 계산에서 제외합니다.")
+    if company.notes:
+        st.info(" ".join(company.notes))
     fcols = st.columns(5)
     for col, (label, value) in zip(fcols, company.factors.items()):
-        with col: score_card(label.upper(), value, "결측 항목 제외 · 상대평가 가능 시 혼합", compact=True)
+        with col:
+            score_card(
+                COMPANY_FACTOR_LABELS.get(label, label),
+                value,
+                "사용 가능한 재무 데이터로 계산 · 비교 데이터가 충분하면 업종 상대평가를 함께 반영",
+                compact=True,
+            )
     if company.relative:
         rel = pd.DataFrame([{"지표": k, "업종 상대점수": v} for k,v in company.relative.items() if v is not None])
         if not rel.empty:
@@ -672,7 +868,6 @@ def render_company_summary(a: dict):
                 st.dataframe(rel, hide_index=True, use_container_width=True,
                              column_config={"업종 상대점수": st.column_config.ProgressColumn("업종 상대점수", min_value=0,max_value=100,format="%.1f")})
                 st.caption("자동 동종업종 후보: " + (", ".join(a["peer_symbols"]) if a["peer_symbols"] else "후보가 충분하지 않습니다."))
-
 
 def render_consensus(a: dict):
     cons = a["consensus"]
@@ -738,21 +933,21 @@ def render_analysis(a: dict, symbol: str):
     inf,tech,market,company,risk,setups,opp = a["info"],a["tech"],a["market"],a["company"],a["risk"],a["setups"],a["opportunity"]
     name=inf.get("longName") or inf.get("shortName") or symbol
     st.header(f"{name} · {symbol}")
-    st.caption(f"V6.0.2 종합분석 · 데이터 기준 {pd.Timestamp(a['frame'].index[-1]).date()} · {a['region']} Market · Sector {a['sector'] or 'N/A'}")
+    st.caption(f"V6.0.3 종합분석 · 데이터 기준 {pd.Timestamp(a['frame'].index[-1]).date()} · {a['region']} Market · Sector {a['sector'] or 'N/A'}")
 
     pcls=status_class(setups.preferred); rcls=status_class(risk.level)
     st.markdown(f"""<div class='decision'><div class='v6-kicker'>V6 MULTI-LENS DECISION</div>
-    <h2>Opportunity {opp.score:.1f} · {grade_ko(opp.score)}</h2>
-    <p><b>우선 진입 방식</b> · <span class='{pcls}'>{preferred_ko(setups.preferred)}</span> &nbsp; | &nbsp; <b>위험</b> · <span class='{rcls}'>{risk_ko(risk.level)}</span> &nbsp; | &nbsp; <b>시장 국면</b> · {market_label_ko(market.label)}</p>
+    <h2>종목 매력도 (Opportunity) {opp.score:.1f} · {grade_ko(opp.score)}</h2>
+    <p><b>우선 진입 방식 (Preferred Setup)</b> · <span class='{pcls}'>{preferred_ko(setups.preferred)}</span> &nbsp; | &nbsp; <b>위험</b> · <span class='{rcls}'>{risk_ko(risk.level)}</span> &nbsp; | &nbsp; <b>시장 국면</b> · {market_label_ko(market.label)}</p>
     <p>{opp.interpretation} {setups.summary}</p></div>""", unsafe_allow_html=True)
 
     cols=st.columns(5)
     items=[
-        ("OPPORTUNITY",opp.score,"종목 매력도 · Entry/Risk 별도"),
-        ("COMPANY QUALITY",company.score,f"Coverage {company.coverage*100:.0f}% · {company.confidence}"),
-        ("TREND / LEADERSHIP",tech.trend,f"12M {tech.ret_12m:+.1f}%"),
-        ("RELATIVE STRENGTH",tech.relative_strength,"시장 벤치마크 대비"),
-        ("MOMENTUM / DEMAND",.60*tech.momentum+.40*tech.demand,f"RSI {tech.rsi:.1f} · Vol {tech.volume_ratio:.2f}x"),
+        ("종목 매력도 (Opportunity)",opp.score,"좋은 종목인가 · Entry/Risk 별도"),
+        ("기업 품질 (Company Quality)",company.score,f"Coverage {company.coverage*100:.0f}% · {company.confidence}"),
+        ("추세·리더십 (Trend / Leadership)",tech.trend,f"12M {tech.ret_12m:+.1f}%"),
+        ("상대강도 (Relative Strength)",tech.relative_strength,"시장 벤치마크 대비"),
+        ("모멘텀·수급 (Momentum / Demand)",.60*tech.momentum+.40*tech.demand,f"RSI {tech.rsi:.1f} · Vol {tech.volume_ratio:.2f}x"),
     ]
     for col,item in zip(cols,items):
         with col: score_card(*item)
@@ -779,13 +974,13 @@ def render_analysis(a: dict, symbol: str):
 - **눌림목 진입(Pullback Entry)**: 상승 구조를 유지하면서 지지구간·EMA 부근으로 조정됐는지 평가합니다. 가격 메리트와 손절 거리, 건강한 거래량 감소를 중요하게 봅니다.
 - **모멘텀 진입(Momentum Entry)**: 돌파·신고가 접근·상대강도·거래량 증가를 이용해 **강한 흐름을 따라갈 수 있는지** 평가합니다. RSI가 높다는 이유만으로 자동 감점하지 않습니다.
         """)
-    trajectory_chart(traj,["Opportunity","Pullback","Momentum Entry"],f"overall_traj_{symbol}","최근 10영업일 · 종목 매력도와 진입 변화")
+    trajectory_chart(traj,["Opportunity","Pullback","Momentum Entry"],f"overall_traj_{symbol}","최근 10영업일 · 종목 매력도(Opportunity)와 진입 변화")
 
     render_scenarios(a)
     render_sr_and_chart(a)
 
     data_date=pd.Timestamp(a["frame"].index[-1]).date()
-    HISTORY.record(symbol,{"opportunity":opp.score,"company":company.score,"trend":tech.trend,"momentum":tech.momentum,"relative_strength":tech.relative_strength,"pullback":setups.pullback.score,"momentum_entry":setups.momentum.score,"market":market.score,"risk":risk.score,"preferred_setup":setups.preferred},data_date,{"version":"6.0.2","source":"recorded"})
+    HISTORY.record(symbol,{"opportunity":opp.score,"company":company.score,"trend":tech.trend,"momentum":tech.momentum,"relative_strength":tech.relative_strength,"pullback":setups.pullback.score,"momentum_entry":setups.momentum.score,"market":market.score,"risk":risk.score,"preferred_setup":setups.preferred},data_date,{"version":"6.0.3","source":"recorded"})
 
     with st.expander("최근 뉴스"):
         rows=news(symbol)
@@ -824,7 +1019,7 @@ def render_can_slim(a: dict):
         "M":"현재 미국/한국 시장 국면 점수입니다.",
     }
     st.subheader("CAN SLIM 분석")
-    st.caption("V6의 Opportunity 점수와 별개의 보조 프레임워크입니다. 원형 CAN SLIM의 공개 데이터 대용지표를 사용하며 결측값은 임의 0점 처리하지 않습니다.")
+    st.caption("V6의 Opportunity 점수와 별개의 보조 프레임워크입니다. 원형 CAN SLIM의 공개 데이터 대용지표를 사용하며 제공되지 않은 값은 임의로 0점 처리하지 않습니다.")
     cols=st.columns(4)
     for i,(k,v) in enumerate(can.items()):
         with cols[i%4]: score_card(f"{k} · {desc[k]}",v,guide[k],compact=True)
@@ -849,7 +1044,7 @@ def render_aux_quant(a: dict):
         st.caption("보조 점수는 50을 중립으로 읽습니다. 방향 확인용이며 단독 매수·매도 신호로 사용하지 않습니다.")
         cols=st.columns(2)
         for i,(k,v) in enumerate(aux.items()):
-            with cols[i%2]: score_card(k,v,guides[k],compact=True)
+            with cols[i%2]: score_card(AUX_LABELS.get(k,k),v,guides[k],compact=True)
 
 
 def render_peer_comparison(a: dict, symbol: str):
@@ -883,7 +1078,7 @@ def render_quant_analysis(a: dict, symbol: str):
     st.caption("V6 퀀트 종합점수는 기업 품질 + 추세 + 모멘텀 + 수급 + 상대강도를 묶은 설명용 정량 점수입니다. 시장 국면과 진입 점수는 중복을 피하기 위해 별도로 봅니다.")
     c1,c2,c3,c4,c5=st.columns(5)
     for col,(label,value,sub) in zip([c1,c2,c3,c4,c5],[
-        ("퀀트 종합",q["score"],"시장환경·진입 점수 제외"),("추세",tech.trend,"중장기 구조"),("모멘텀",tech.momentum,f"RSI {tech.rsi:.1f}"),("수급",tech.demand,f"거래량 {tech.volume_ratio:.2f}x"),("상대강도",tech.relative_strength,"시장 대비"),
+        ("퀀트 종합 (Quant Composite)",q["score"],"시장환경·진입 점수 제외"),("추세 (Trend)",tech.trend,"중장기 구조"),("모멘텀 (Momentum)",tech.momentum,f"RSI {tech.rsi:.1f}"),("수급 (Demand)",tech.demand,f"거래량 {tech.volume_ratio:.2f}x"),("상대강도 (Relative Strength)",tech.relative_strength,"시장 대비"),
     ]):
         with col: score_card(label,value,sub)
 
@@ -1151,7 +1346,7 @@ def calibration_summary_text(summary: pd.DataFrame, threshold: int) -> str:
 
 def render_calibration(a: dict, symbol: str):
     st.header(f"Entry Calibration · {symbol}")
-    st.caption("Point-in-time 재무 데이터 누출을 피하기 위해 V6.0.2 Calibration은 가격 기반 Pullback/Momentum Engine만 검증합니다. 시장 국면은 중립으로 고정합니다.")
+    st.caption("Point-in-time 재무 데이터 누출을 피하기 위해 V6.0.3 Calibration은 가격 기반 Pullback/Momentum Engine만 검증합니다. 시장 국면은 중립으로 고정합니다.")
     threshold=st.slider("Signal Threshold · 신호 인정 기준",60,90,75,help="과거 Pullback/Momentum Entry 점수가 이 값 이상인 거래일만 '신호 발생'으로 집계합니다.")
     if threshold<70: mode_txt="넓은 기준 · 신호 수가 많아지지만 약한 Setup도 포함될 수 있습니다."
     elif threshold<80: mode_txt="균형 기준 · 신호 수와 강도의 균형을 보는 구간입니다."
@@ -1188,7 +1383,7 @@ def render_calibration(a: dict, symbol: str):
 
 # -------------------- App shell --------------------
 st.title("Stock Analyzer by Kijungnam")
-st.caption("V6.0.2 · MULTI-LENS SETUP & DECISION SYSTEM · Explainability & UX Restoration")
+st.caption("V6.0.3 · MULTI-LENS SETUP & DECISION SYSTEM · Visual Clarity & Explainability")
 
 with st.expander("🔥 V6 종목 스캐너 · 시장 전체 후보 찾기", expanded=False):
     render_scanner_section()
@@ -1213,7 +1408,7 @@ st.divider()
 analysis=None
 if symbol and mode in ("📊 종합분석","🎯 퀀트분석","🧩 옵션분석","🧪 Calibration"):
     try:
-        with st.spinner(f"{symbol} · V6.0.2 엔진을 계산하는 중입니다..."): analysis=build_full_analysis(symbol)
+        with st.spinner(f"{symbol} · V6.0.3 엔진을 계산하는 중입니다..."): analysis=build_full_analysis(symbol)
     except Exception as exc: st.error(f"분석을 계산하지 못했습니다: {exc}")
 
 if mode=="📊 종합분석":

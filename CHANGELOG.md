@@ -1,3 +1,14 @@
+# V6.0.3
+
+- Polished 10-trading-day charts with vertical trading-day guides, non-overlapping colored score labels, and per-series 5D change summaries.
+- Added Korean + English naming for Opportunity, Pullback Entry, Momentum Entry, Company Quality factors, and key Quant factors.
+- Added clearer Entry status color hierarchy and detailed status explanations.
+- Added Risk Engine status colors and a clearer overall risk summary.
+- Normalized auxiliary Quant and Company card heights.
+- Replaced developer-oriented missing-data wording with user-friendly explanations.
+- Expanded AI briefings for first-time users without changing V6 scoring logic.
+- Kept the V6 engine logic unchanged; this release focuses on visual clarity and explainability.
+
 # V6.0.2
 
 - 스캐너를 종목 검색 위로 이동하고 주요 스캐너 탭을 한글화했습니다.

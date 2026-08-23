@@ -132,7 +132,7 @@ def build_company_snapshot(info: Mapping, peer_infos: Sequence[Mapping] | None =
 
     notes = []
     if raw_coverage < .65:
-        notes.append("공개 재무 데이터 일부가 누락되어 결측 항목은 점수 계산에서 제외했습니다.")
+        notes.append("공개 재무 데이터 일부가 제공되지 않아 해당 항목은 점수 계산에서 제외했습니다.")
     if peer_infos and relative_coverage >= .35:
         notes.append("동일/유사 업종 후보군의 상대 순위를 절대평가와 함께 반영했습니다.")
     elif not peer_infos:
