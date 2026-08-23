@@ -1,5 +1,13 @@
 # Changelog
 
+## V6.0.6
+- Separated preferred entry approach from actual entry readiness.
+- Added a four-part Entry Decision summary: Pullback score, Momentum score, preferred approach, and current readiness.
+- Added situation-specific Korean interpretation for mature pullbacks, developing pullbacks, confirmed momentum, extended momentum, and no-clear-setup cases.
+- Updated top Decision Summary and Analysis Consensus to avoid interpreting a relative setup preference as an automatic buy signal.
+
+# Changelog
+
 ## V6.0.5
 - Polished summary card labels with Korean-first / English-on-next-line formatting for aligned value rows.
 - Increased Consensus lens card height so long notes (especially Entry Setup) remain fully visible.

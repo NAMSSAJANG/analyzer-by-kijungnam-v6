@@ -158,13 +158,14 @@ h1,h2,h3{letter-spacing:-.025em}
 .cal-help{border:1px solid #315272;background:#0d1b2d;border-radius:14px;padding:15px 17px;line-height:1.72;color:#cbd5e1;margin:8px 0 15px}
 .delta-card{box-sizing:border-box;border:1px solid #29415e;border-radius:12px;padding:12px 14px;background:#0d1b2d;min-height:92px;margin:4px 0 14px}.delta-label{color:#94a3b8;font-size:.78rem;font-weight:800;line-height:1.4}.delta-value{font-size:1.22rem;font-weight:900;margin-top:6px}.delta-change{font-size:.83rem;font-weight:800;margin-left:7px}
 .risk-summary{border:1px solid #29415e;border-radius:12px;padding:13px 16px;background:#0a1728;margin:4px 0 10px;color:#cbd5e1;line-height:1.65}.consensus-summary{border:1px solid #315272;border-radius:16px;padding:18px 20px;background:linear-gradient(135deg,#0d1b2d,#10243a);margin:10px 0 16px;line-height:1.75;color:#dbeafe}.consensus-meter{border:1px solid #29415e;border-radius:13px;padding:14px 16px;background:#0a1728;min-height:104px}.consensus-meter .label{color:#94a3b8;font-size:.8rem;font-weight:800}.consensus-meter .value{font-size:1.7rem;font-weight:900;margin-top:7px;color:#f8fafc}
+.entry-decision-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:18px 0 12px}.entry-decision-card{box-sizing:border-box;border:1px solid #29415e;border-radius:14px;padding:16px 17px;background:#0a1728;min-height:122px}.entry-decision-label{color:#94a3b8;font-size:.76rem;font-weight:850;line-height:1.45}.entry-decision-value{font-size:1.34rem;font-weight:900;margin-top:9px;line-height:1.35}.entry-decision-interpretation{border:1px solid #315272;border-radius:14px;padding:17px 19px;background:linear-gradient(135deg,#0d1b2d,#10243a);color:#dbeafe;line-height:1.75;margin-bottom:18px}.entry-decision-interpretation b{color:#f8fafc}
 [data-testid="stMetricValue"]{font-size:clamp(1.4rem,2.5vw,2.1rem)}
 [data-testid="stDataFrame"]{border:1px solid #29415e;border-radius:10px;overflow:hidden}
 div[data-testid="stHorizontalBlock"]{gap:1.15rem;align-items:stretch}
 div[data-testid="stHorizontalBlock"]>div[data-testid="stColumn"]{min-height:100%}
 [data-testid="stDataFrame"]{margin-bottom:16px}
 hr{margin:2rem 0 2.2rem!important}
-@media(max-width:700px){.block-container{padding-left:.8rem;padding-right:.8rem}.v6-card,.brief-card,.scenario{height:auto;min-height:0}.indicator-row{align-items:flex-start}}
+@media(max-width:700px){.block-container{padding-left:.8rem;padding-right:.8rem}.v6-card,.brief-card,.scenario{height:auto;min-height:0}.indicator-row{align-items:flex-start}.entry-decision-grid{grid-template-columns:1fr 1fr}}
 </style>
 """, unsafe_allow_html=True)
 
@@ -277,10 +278,10 @@ MOMENTUM_STATUS = {
     "FAILED BREAKOUT": "진입 보류 · 돌파 실패",
 }
 PREFERRED_STATUS = {
-    "Momentum Preferred": "모멘텀 진입 우세 (Momentum Preferred)",
-    "Pullback Preferred": "눌림목 진입 우세 (Pullback Preferred)",
-    "Both Valid": "두 진입 방식 모두 유효 (Both Valid)",
-    "No Clear Setup": "명확한 진입 방식 없음 (No Clear Setup)",
+    "Momentum Preferred": "모멘텀 접근 (Momentum)",
+    "Pullback Preferred": "눌림목 접근 (Pullback)",
+    "Both Valid": "두 방식 모두 가능 (Both Valid)",
+    "No Clear Setup": "뚜렷한 우선 방식 없음",
 }
 
 
@@ -291,6 +292,82 @@ def setup_status_ko(setup) -> str:
 
 def preferred_ko(value: str) -> str:
     return PREFERRED_STATUS.get(value, value)
+
+
+def entry_decision_view(setups):
+    """Separate relative setup preference from actual entry readiness."""
+    pull, mom = setups.pullback, setups.momentum
+    preferred = setups.preferred
+
+    if preferred == "Pullback Preferred":
+        approach = "눌림목 접근 (Pullback)"
+        if str(pull.status).upper() == "READY":
+            state, cls = "진입 유리", "status-green"
+            text = (
+                "좋은 눌림목이 실제로 형성된 상태입니다. 상승 구조를 유지하면서 지지구간과의 거리가 가까워졌고 "
+                "가격 메리트도 개선됐습니다. 지지 반응과 거래량 패턴이 유지된다면 눌림목 분할 진입을 검토할 수 있습니다."
+            )
+        else:
+            state, cls = "진입 검토", "status-teal"
+            text = (
+                "두 진입 방식 중에서는 눌림목 접근이 더 적합합니다. 다만 아직 완전히 성숙한 눌림목은 아니므로 "
+                "지지 유지와 반등 확인을 한 번 더 확인한 뒤 분할 접근하는 편이 유리합니다."
+            )
+    elif preferred == "Momentum Preferred":
+        approach = "모멘텀 접근 (Momentum)"
+        status = str(mom.status).upper()
+        if status == "CONFIRMED":
+            state, cls = "진입 유리", "status-green"
+            text = (
+                "강한 추세와 돌파 흐름이 실제로 확인된 상태입니다. 현재는 눌림을 오래 기다리면 오히려 강한 상승 흐름을 "
+                "놓칠 수 있습니다. 다만 거래량 확인과 가격 확장 Risk를 함께 보면서 초기 비중을 조절하는 것이 중요합니다."
+            )
+        elif status == "EXTENDED":
+            state, cls = "과열 주의", "status-orange"
+            text = (
+                "모멘텀 접근이 상대적으로 적합하지만 가격 확장이 커진 상태입니다. 강한 흐름을 인정하되 추격 비중을 줄이고, "
+                "돌파 가격 재지지나 짧은 조정을 확인하는 편이 안전합니다."
+            )
+        else:
+            state, cls = "진입 검토", "status-teal"
+            text = (
+                "모멘텀 접근이 상대적으로 적합하고 초기 돌파 신호가 형성되고 있습니다. 눌림을 기다리기보다 돌파 가격 유지와 "
+                "거래량 증가를 확인하면서 분할 진입을 검토할 수 있는 단계입니다."
+            )
+    elif preferred == "Both Valid":
+        approach = "두 방식 모두 가능 (Pullback / Momentum)"
+        if str(pull.status).upper() == "READY" and str(mom.status).upper() == "CONFIRMED":
+            state, cls = "진입 유리", "status-green"
+        else:
+            state, cls = "진입 검토", "status-teal"
+        text = (
+            "눌림목과 모멘텀 조건이 모두 유효합니다. 돌파 후 첫 재지지처럼 두 Setup이 겹치는 구간일 수 있으므로, "
+            "현재가와 지지 Zone·Trigger 중 더 가까운 조건을 기준으로 진입 방식을 선택하는 편이 좋습니다."
+        )
+    else:
+        diff = pull.score - mom.score
+        if diff >= 8:
+            approach = "눌림목 관찰 (Pullback Watch)"
+            state, cls = "관망 · 조건 확인", "status-yellow"
+            text = (
+                "둘 중 굳이 고르면 Pullback이 상대적으로 낫지만 아직 실제 진입 준비는 부족합니다. "
+                "지지구간 접근과 가격 안정, 반등 확인이 더 필요하므로 현재는 관망이 우선입니다."
+            )
+        elif diff <= -8:
+            approach = "모멘텀 관찰 (Momentum Watch)"
+            state, cls = "관망 · 돌파 확인", "status-yellow"
+            text = (
+                "모멘텀 점수가 상대적으로 높지만 실제 돌파·거래량 확인 조건은 아직 부족합니다. "
+                "저항 돌파와 거래량 증가가 확인되기 전까지는 추격보다 관망이 적절합니다."
+            )
+        else:
+            approach = "뚜렷한 우선 방식 없음"
+            state, cls = "관망", "status-yellow"
+            text = (
+                "눌림목과 모멘텀 어느 쪽도 현재 뚜렷한 우위를 만들지 못했습니다. 좋은 종목이어도 지금은 신규 진입 Setup이 부족할 수 있으므로 "
+                "지지 형성 또는 돌파 확인을 기다리는 편이 좋습니다."
+            )
+    return {"approach": approach, "state": state, "class": cls, "interpretation": text}
 
 
 def risk_ko(value: str) -> str:
@@ -773,10 +850,11 @@ def build_briefings(a: dict) -> dict[str, str]:
     )
 
     pull_label, mom_label = setup_status_ko(setups.pullback), setup_status_ko(setups.momentum)
+    entry_view = entry_decision_view(setups)
     entry_text = (
         f"눌림목 진입(Pullback Entry)은 {setups.pullback.score:.0f}점 · {pull_label}, 모멘텀 진입(Momentum Entry)은 {setups.momentum.score:.0f}점 · {mom_label}입니다. "
-        f"현재 우선 진입 방식은 {preferred_ko(setups.preferred)}로 해석합니다. 눌림목 점수는 지지구간·EMA 접근과 조정의 질을, 모멘텀 점수는 돌파·상대강도·거래량 확인을 더 중요하게 봅니다. "
-        f"{setups.summary} 실제 신규 진입에서는 점수만 보지 말고 참고 Zone, Trigger, 무효화선과 거래량 확인을 함께 보세요."
+        f"우선 방식은 {entry_view['approach']}, 현재 진입 상태는 {entry_view['state']}입니다. "
+        f"{entry_view['interpretation']} 실제 신규 진입에서는 점수만 보지 말고 참고 Zone, Trigger, 무효화선과 거래량 확인을 함께 보세요."
     )
 
     market_text = (
@@ -786,9 +864,10 @@ def build_briefings(a: dict) -> dict[str, str]:
         "시장 국면이 혼조일 때는 지수 방향보다 종목 자체의 상대강도와 지지 유지가 더 중요해집니다."
     )
 
+    entry_view = entry_decision_view(setups)
     overall_text = (
         f"종목 매력도(Opportunity)는 {opp.score:.0f}점 · {grade_ko(opp.score)}입니다. 이 점수는 기업 품질, 추세·리더십, 상대강도, 모멘텀·수급, 시장환경을 합쳐 '관찰할 가치가 높은 종목인가'를 평가하며, 현재 가격이 바로 좋은 매수 가격이라는 뜻은 아닙니다. "
-        f"현재 우선 진입 방식은 {preferred_ko(setups.preferred)}, 위험 수준은 {risk_ko(risk.level)}, 시장 국면은 {market_label_ko(market.label)}입니다. "
+        f"현재 우선 방식은 {entry_view['approach']}, 진입 상태는 {entry_view['state']}, 위험 수준은 {risk_ko(risk.level)}, 시장 국면은 {market_label_ko(market.label)}입니다. "
         f"{opp.interpretation} 따라서 종목 매력도와 실제 진입 타이밍을 분리해서 보고, Entry Engine과 Risk Engine의 확인 조건을 함께 읽는 것이 V6의 핵심입니다."
     )
     return {"overall": overall_text, "company": company_text, "quant": quant_text, "entry": entry_text, "market": market_text}
@@ -808,6 +887,7 @@ def render_ai_briefings(a: dict):
 
 def render_entry_engine(a: dict):
     setups = a["setups"]
+    view = entry_decision_view(setups)
     st.markdown("<div class='v6-section'></div>", unsafe_allow_html=True)
     st.subheader("Entry Engine V3 · 진입 방식")
     e1, e2 = st.columns(2)
@@ -816,18 +896,23 @@ def render_entry_engine(a: dict):
     with e2:
         st.markdown("<div class='explain'><b>🚀 모멘텀 진입 (Momentum Entry)</b><br>저항 돌파·신고가 접근·상대강도·거래량 증가를 통해 강한 상승 흐름을 따라갈 수 있는지 평가합니다. RSI가 높더라도 강한 추세와 수급이 확인되면 단순 과열로 자동 감점하지 않습니다.</div>", unsafe_allow_html=True)
 
+    pull_cls = entry_status_class(setups.pullback)
+    mom_cls = entry_status_class(setups.momentum)
+    st.markdown(
+        f"<div class='entry-decision-grid'>"
+        f"<div class='entry-decision-card'><div class='entry-decision-label'>눌림목 진입<br><span style='color:#64748b'>(Pullback Entry)</span></div><div class='entry-decision-value' style='color:{score_color(setups.pullback.score)}'>{setups.pullback.score:.1f}</div><div class='{pull_cls}' style='font-weight:850'>{setup_status_ko(setups.pullback)}</div></div>"
+        f"<div class='entry-decision-card'><div class='entry-decision-label'>모멘텀 진입<br><span style='color:#64748b'>(Momentum Entry)</span></div><div class='entry-decision-value' style='color:{score_color(setups.momentum.score)}'>{setups.momentum.score:.1f}</div><div class='{mom_cls}' style='font-weight:850'>{setup_status_ko(setups.momentum)}</div></div>"
+        f"<div class='entry-decision-card'><div class='entry-decision-label'>우선 방식<br><span style='color:#64748b'>(Preferred Approach)</span></div><div class='entry-decision-value'>{view['approach']}</div></div>"
+        f"<div class='entry-decision-card'><div class='entry-decision-label'>현재 진입 상태<br><span style='color:#64748b'>(Entry Readiness)</span></div><div class='entry-decision-value {view['class']}'>{view['state']}</div></div>"
+        f"</div><div class='entry-decision-interpretation'><b>해석</b><br>{view['interpretation']}</div>",
+        unsafe_allow_html=True,
+    )
+
     c1, c2 = st.columns(2)
     for col, setup, icon in ((c1, setups.pullback, "🎯"), (c2, setups.momentum, "🚀")):
         with col:
-            cls = entry_status_class(setup)
-            display = setup_status_ko(setup)
-            setup_title = "눌림목 진입 (Pullback Entry)" if setup.name == "Pullback" else "모멘텀 진입 (Momentum Entry)"
-            st.markdown(
-                f"<div class='v6-card entry'><div class='v6-kicker'>{icon} {setup_title}</div>"
-                f"<div class='v6-value'>{setup.score:.1f}</div><div class='{cls}' style='font-size:1.05rem;font-weight:900'>{display}</div>"
-                f"<div class='v6-sub' style='margin-top:8px'>{entry_status_note(setup)}</div></div>",
-                unsafe_allow_html=True,
-            )
+            setup_title = "눌림목 진입 상세 (Pullback Entry)" if setup.name == "Pullback" else "모멘텀 진입 상세 (Momentum Entry)"
+            st.markdown(f"<div class='v6-kicker' style='margin:8px 0 10px'>{icon} {setup_title}</div>", unsafe_allow_html=True)
             factor_map = PULLBACK_FACTOR_KO if setup.name == "Pullback" else MOMENTUM_FACTOR_KO
             rows = [{"요소": factor_map.get(k, k), "점수": round(v,1), "해석": (f"{market_label_ko(a['market'].label)} {a['market'].score:.1f}" if k=="Market" else setup.details[k])} for k,v in setup.factors.items()]
             st.dataframe(
@@ -906,7 +991,7 @@ def render_consensus(a: dict):
     lens_items = [
         ("기업 분석", "Company Quality", company.score, grade_ko(company.score) if company.score is not None else "데이터 부족", f"데이터 커버리지 {company.coverage*100:.0f}%"),
         ("퀀트·추세", "Quant / Trend", quant["score"], grade_ko(quant["score"]), f"퀀트 {quant['score']:.0f} · 추세 {tech.trend:.0f}"),
-        ("진입 Setup", "Entry Setup", max(setups.pullback.score, setups.momentum.score), preferred_ko(setups.preferred), f"눌림목 {setups.pullback.score:.0f} · 모멘텀 {setups.momentum.score:.0f}"),
+        ("진입 판단", "Entry Decision", max(setups.pullback.score, setups.momentum.score), entry_decision_view(setups)["approach"], f"현재 상태 {entry_decision_view(setups)['state']} · 눌림목 {setups.pullback.score:.0f} / 모멘텀 {setups.momentum.score:.0f}"),
         ("시장 국면", "Market Regime", market.score, market_label_ko(market.label), f"데이터 품질 {market.data_quality*100:.0f}%"),
         ("옵션 확인", "Options Confirmation", None, option_label if option_label != "N/A" else "N/A", "현물 판단의 보조 확인값"),
     ]
@@ -990,14 +1075,16 @@ def render_analysis(a: dict, symbol: str):
     inf,tech,market,company,risk,setups,opp = a["info"],a["tech"],a["market"],a["company"],a["risk"],a["setups"],a["opportunity"]
     name=inf.get("longName") or inf.get("shortName") or symbol
     st.header(f"{name} · {symbol}")
-    st.caption(f"V6.0.5 종합분석 · 데이터 기준 {pd.Timestamp(a['frame'].index[-1]).date()} · {a['region']} Market · Sector {a['sector'] or 'N/A'}")
+    st.caption(f"V6.0.6 종합분석 · 데이터 기준 {pd.Timestamp(a['frame'].index[-1]).date()} · {a['region']} Market · Sector {a['sector'] or 'N/A'}")
 
     st.subheader("종합 판단 요약")
-    pcls=status_class(setups.preferred); rcls=status_class(risk.level)
+    entry_view = entry_decision_view(setups)
+    rcls=status_class(risk.level)
     st.markdown(f"""<div class='decision'><div class='v6-kicker'>V6 MULTI-LENS DECISION SUMMARY</div>
     <h2>종목 매력도 (Opportunity) {opp.score:.1f} · {grade_ko(opp.score)}</h2>
-    <p><b>우선 진입 방식 (Preferred Setup)</b> · <span class='{pcls}'>{preferred_ko(setups.preferred)}</span> &nbsp; | &nbsp; <b>위험</b> · <span class='{rcls}'>{risk_ko(risk.level)}</span> &nbsp; | &nbsp; <b>시장 국면</b> · {market_label_ko(market.label)}</p>
-    <p>{opp.interpretation} {setups.summary}</p></div>""", unsafe_allow_html=True)
+    <p><b>우선 방식 (Preferred Approach)</b> · <span class='{entry_view['class']}'>{entry_view['approach']}</span> &nbsp; | &nbsp; <b>현재 진입 상태</b> · <span class='{entry_view['class']}'>{entry_view['state']}</span><br>
+    <b>위험</b> · <span class='{rcls}'>{risk_ko(risk.level)}</span> &nbsp; | &nbsp; <b>시장 국면</b> · {market_label_ko(market.label)}</p>
+    <p>{opp.interpretation} {entry_view['interpretation']}</p></div>""", unsafe_allow_html=True)
 
     cols=st.columns(5)
     items=[
@@ -1041,7 +1128,7 @@ def render_analysis(a: dict, symbol: str):
     render_sr_and_chart(a)
 
     data_date=pd.Timestamp(a["frame"].index[-1]).date()
-    HISTORY.record(symbol,{"opportunity":opp.score,"company":company.score,"trend":tech.trend,"momentum":tech.momentum,"relative_strength":tech.relative_strength,"pullback":setups.pullback.score,"momentum_entry":setups.momentum.score,"market":market.score,"risk":risk.score,"preferred_setup":setups.preferred},data_date,{"version":"6.0.5","source":"recorded"})
+    HISTORY.record(symbol,{"opportunity":opp.score,"company":company.score,"trend":tech.trend,"momentum":tech.momentum,"relative_strength":tech.relative_strength,"pullback":setups.pullback.score,"momentum_entry":setups.momentum.score,"market":market.score,"risk":risk.score,"preferred_setup":setups.preferred},data_date,{"version":"6.0.6","source":"recorded"})
 
     with st.expander("최근 뉴스"):
         rows=news(symbol)
