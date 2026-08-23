@@ -6,9 +6,10 @@ A Streamlit-based stock analysis tool for evaluating company quality, trend, mom
 
 ## Main Features
 
+- V6 Integrated Decision Dashboard
 - Opportunity & Company Quality
 - Pullback / Momentum Entry
-- Quant & CAN SLIM Analysis
+- Quant Profile, Chart Interpretation & CAN SLIM
 - US / KR Market Regime
 - Risk & Support / Resistance
 - Options Analysis

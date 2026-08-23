@@ -1,10 +1,11 @@
-## V6.0.10
-- Replaced the single Calibration `20D Average` stat box with a dedicated period-average section.
-- Added equal-height 5D / 10D / 20D / 60D average-return boxes to both Pullback and Momentum cards.
-- Kept the six headline validation metrics focused on 20D cases, positive cases, 20D median, MDD20, Setup episodes, and sample confidence.
-- Added plain-language holding-period guidance and clarified that 60D is a trend-persistence reference rather than an entry-accuracy measure.
-- Rebuilt the two strategy cards as one responsive equal-height grid with automatic expansion for long interpretations.
-- Kept the V6.0.9 Setup Episode and 20D validation-case calculation logic unchanged.
+## V6.0.11
+- Added **V6 통합 판단 (Decision Dashboard)** between Scanner and detailed analysis.
+- Reorganized the workflow into Scanner → Integrated Decision → Core / Quant / Options / Market / Calibration / History.
+- Added Quant Profile classification, Overall × Quant consistency, and Entry Implication.
+- Added automatic Quant Chart Interpretation for trend structure, price position, momentum, and demand.
+- Renamed Trend / Leadership to **Trend Strength** in the primary UI to reduce overlap with Relative Strength.
+- Added 5D / 10D / 20D / 60D average-return strips to Calibration strategy cards; 60D is explicitly treated as trend-persistence context.
+- Reuses existing scoring engines; this release focuses on hierarchy, interpretation, and decision flow.
 
 ## V6.0.9
 - Reworked Calibration case counting into Setup Episodes and 20D validation cases.
