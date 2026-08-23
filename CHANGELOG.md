@@ -1,3 +1,11 @@
+## V6.0.10
+- Replaced the single Calibration `20D Average` stat box with a dedicated period-average section.
+- Added equal-height 5D / 10D / 20D / 60D average-return boxes to both Pullback and Momentum cards.
+- Kept the six headline validation metrics focused on 20D cases, positive cases, 20D median, MDD20, Setup episodes, and sample confidence.
+- Added plain-language holding-period guidance and clarified that 60D is a trend-persistence reference rather than an entry-accuracy measure.
+- Rebuilt the two strategy cards as one responsive equal-height grid with automatic expansion for long interpretations.
+- Kept the V6.0.9 Setup Episode and 20D validation-case calculation logic unchanged.
+
 ## V6.0.9
 - Reworked Calibration case counting into Setup Episodes and 20D validation cases.
 - A new Setup Episode requires at least 3 below-threshold trading rows before re-entry.

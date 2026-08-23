@@ -5,6 +5,7 @@ No network calls are made.
 """
 from __future__ import annotations
 
+import gc
 import tempfile
 from pathlib import Path
 
@@ -71,7 +72,10 @@ def main():
 
     detail, summary = run_setup_calibration(frame, bench, threshold=60)
     assert not detail.empty
-    assert {"Signals","Episodes","Validation 20D","Positive 20D","Median 20D"}.issubset(summary.columns)
+    assert {
+        "Signals", "Episodes", "Validation 20D", "Positive 20D", "Median 20D",
+        "Avg 5D", "Avg 10D", "Avg 20D", "Avg 60D", "Avg MDD20",
+    }.issubset(summary.columns)
     for _, row in summary.iterrows():
         n = int(row["Validation 20D"])
         pos = int(row["Positive 20D"])
@@ -84,8 +88,10 @@ def main():
         store=SQLiteHistoryStore(Path(tmp)/"history.sqlite")
         store.record("TEST", {"opportunity":80,"trend":82,"momentum":78,"pullback":55,"momentum_entry":84,"market":72,"risk":40,"preferred_setup":"Momentum Preferred"})
         assert len(store.rows("TEST")) == 1
+        del store
+        gc.collect()  # Release Windows SQLite handles before TemporaryDirectory cleanup.
 
-    print("V6 offline smoke tests passed")
+    print("V6.0.10 offline smoke tests passed")
 
 
 if __name__ == "__main__":

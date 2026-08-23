@@ -29,7 +29,7 @@ from setup_engine import build_setups
 from sr_engine import build_zones
 from technical_engine import build_technical_snapshot
 
-st.set_page_config(page_title="Stock Analyzer V6.0.9", page_icon="📈", layout="wide")
+st.set_page_config(page_title="Stock Analyzer V6.0.10", page_icon="📈", layout="wide")
 
 DB_FILE = Path(os.getenv("ANALYZER_DB_FILE", ".data/stock_analyzer_v6.sqlite"))
 HISTORY = SQLiteHistoryStore(DB_FILE)
@@ -156,7 +156,28 @@ h1,h2,h3{letter-spacing:-.025em}
 .pulse-shell{box-sizing:border-box;border:1px solid #29415e;border-radius:13px;padding:14px;background:#0d1b2d;min-height:174px;margin-bottom:10px}
 .pulse-head{display:flex;justify-content:space-between;gap:8px;align-items:baseline}.pulse-head b{color:#f8fafc}.pulse-up{color:#34d399}.pulse-down{color:#fb7185}
 .cal-help{border:1px solid #315272;background:#0d1b2d;border-radius:14px;padding:15px 17px;line-height:1.72;color:#cbd5e1;margin:8px 0 15px}
-.cal-current{box-sizing:border-box;border:1px solid #29415e;border-radius:15px;padding:18px 19px;background:#0d1b2d;min-height:190px;height:auto;margin-bottom:14px}.cal-current .score{font-size:2rem;font-weight:900;line-height:1.1;margin:8px 0}.cal-current .state{font-weight:850;margin-bottom:8px}.cal-compare{border:1px solid #315272;border-radius:16px;padding:18px 20px;background:linear-gradient(135deg,#0d1b2d,#10243a);margin:12px 0 20px;line-height:1.72}.cal-strategy{box-sizing:border-box;border:1px solid #29415e;border-radius:16px;padding:19px 20px;background:#0d1b2d;min-height:470px;height:auto;margin-bottom:18px;overflow:visible}.cal-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.cal-stat{border:1px solid #20344d;border-radius:11px;background:#0a1728;padding:10px 12px;min-height:88px}.cal-stat .k{color:#94a3b8;font-size:.76rem;font-weight:800;line-height:1.35}.cal-stat .v{font-size:1.18rem;font-weight:900;margin-top:4px;color:#f8fafc;line-height:1.25}.cal-tag{display:inline-block;border-radius:99px;padding:4px 9px;font-size:.78rem;font-weight:850;margin-left:6px}.cal-tag.ok{background:#123c32;color:#6ee7b7}.cal-tag.wait{background:#49371b;color:#fbbf24}.cal-tag.bad{background:#4a2028;color:#fda4af}.cal-style{border:1px solid #315272;border-radius:16px;padding:20px;background:#0a1728;margin:10px 0 20px}.cal-style h3{margin:.15rem 0 .65rem}.cal-section-note{color:#94a3b8;line-height:1.7;margin:-5px 0 14px}
+.cal-current{box-sizing:border-box;border:1px solid #29415e;border-radius:15px;padding:18px 19px;background:#0d1b2d;min-height:190px;height:auto;margin-bottom:14px}
+.cal-current .score{font-size:2rem;font-weight:900;line-height:1.1;margin:8px 0}
+.cal-current .state{font-weight:850;margin-bottom:8px}
+.cal-compare{border:1px solid #315272;border-radius:16px;padding:18px 20px;background:linear-gradient(135deg,#0d1b2d,#10243a);margin:12px 0 20px;line-height:1.72}
+.cal-strategy-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:stretch;margin-bottom:18px}
+.cal-strategy{box-sizing:border-box;border:1px solid #29415e;border-radius:16px;padding:20px;background:#0d1b2d;min-height:690px;height:100%;overflow:visible;display:flex;flex-direction:column}
+.cal-stat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0}
+.cal-stat{box-sizing:border-box;border:1px solid #20344d;border-radius:11px;background:#0a1728;padding:10px 12px;min-height:88px}
+.cal-stat .k{color:#94a3b8;font-size:.76rem;font-weight:800;line-height:1.35}
+.cal-stat .v{font-size:1.18rem;font-weight:900;margin-top:4px;color:#f8fafc;line-height:1.25}
+.cal-interpretation{margin:2px 0 17px}
+.cal-period-section{border-top:1px solid #29415e;padding-top:16px;margin-top:auto}
+.cal-period-title{color:#f8fafc;font-size:.92rem;font-weight:900;margin-bottom:10px}
+.cal-period-title span{display:block;color:#64748b;font-size:.72rem;font-weight:750;margin-top:2px}
+.cal-period-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.cal-period-stat{box-sizing:border-box;border:1px solid #315272;border-radius:11px;background:#0a1728;padding:10px 8px;min-height:96px;text-align:center;display:flex;flex-direction:column;justify-content:center}
+.cal-period-stat .k{color:#7dd3fc;font-size:.79rem;font-weight:900}
+.cal-period-stat .period{color:#64748b;font-size:.68rem;font-weight:750;margin-top:2px}
+.cal-period-stat .v{color:#f8fafc;font-size:1.12rem;font-weight:900;line-height:1.2;margin-top:7px}
+.cal-period-note{color:#94a3b8;font-size:.78rem;line-height:1.6;margin-top:10px}
+.cal-period-note strong{color:#cbd5e1}
+.cal-tag{display:inline-block;border-radius:99px;padding:4px 9px;font-size:.78rem;font-weight:850;margin-left:6px}.cal-tag.ok{background:#123c32;color:#6ee7b7}.cal-tag.wait{background:#49371b;color:#fbbf24}.cal-tag.bad{background:#4a2028;color:#fda4af}.cal-style{border:1px solid #315272;border-radius:16px;padding:20px;background:#0a1728;margin:10px 0 20px}.cal-style h3{margin:.15rem 0 .65rem}.cal-section-note{color:#94a3b8;line-height:1.7;margin:-5px 0 14px}
 .delta-card{box-sizing:border-box;border:1px solid #29415e;border-radius:12px;padding:12px 14px;background:#0d1b2d;min-height:92px;margin:4px 0 14px}.delta-label{color:#94a3b8;font-size:.78rem;font-weight:800;line-height:1.4}.delta-value{font-size:1.22rem;font-weight:900;margin-top:6px}.delta-change{font-size:.83rem;font-weight:800;margin-left:7px}
 .risk-summary{border:1px solid #29415e;border-radius:12px;padding:13px 16px;background:#0a1728;margin:4px 0 10px;color:#cbd5e1;line-height:1.65}.consensus-summary{border:1px solid #315272;border-radius:16px;padding:18px 20px;background:linear-gradient(135deg,#0d1b2d,#10243a);margin:10px 0 16px;line-height:1.75;color:#dbeafe}.consensus-meter{border:1px solid #29415e;border-radius:13px;padding:14px 16px;background:#0a1728;min-height:104px}.consensus-meter .label{color:#94a3b8;font-size:.8rem;font-weight:800}.consensus-meter .value{font-size:1.7rem;font-weight:900;margin-top:7px;color:#f8fafc}
 .entry-decision-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:18px 0 12px}.entry-decision-card{box-sizing:border-box;border:1px solid #29415e;border-radius:14px;padding:16px 17px;background:#0a1728;min-height:122px}.entry-decision-label{color:#94a3b8;font-size:.76rem;font-weight:850;line-height:1.45}.entry-decision-value{font-size:1.34rem;font-weight:900;margin-top:9px;line-height:1.35}.entry-decision-interpretation{border:1px solid #315272;border-radius:14px;padding:17px 19px;background:linear-gradient(135deg,#0d1b2d,#10243a);color:#dbeafe;line-height:1.75;margin-bottom:18px}.entry-decision-interpretation b{color:#f8fafc}
@@ -166,7 +187,8 @@ div[data-testid="stHorizontalBlock"]{gap:1.15rem;align-items:stretch}
 div[data-testid="stHorizontalBlock"]>div[data-testid="stColumn"]{min-height:100%}
 [data-testid="stDataFrame"]{margin-bottom:16px}
 hr{margin:2rem 0 2.2rem!important}
-@media(max-width:700px){.block-container{padding-left:.8rem;padding-right:.8rem}.v6-card,.brief-card,.scenario{height:auto;min-height:0}.indicator-row{align-items:flex-start}.entry-decision-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:900px){.cal-strategy-grid{grid-template-columns:1fr}.cal-strategy{min-height:0}.cal-period-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.block-container{padding-left:.8rem;padding-right:.8rem}.v6-card,.brief-card,.scenario{height:auto;min-height:0}.indicator-row{align-items:flex-start}.entry-decision-grid{grid-template-columns:1fr 1fr}.cal-stat-grid{grid-template-columns:1fr 1fr}}
 </style>
 """, unsafe_allow_html=True)
 
@@ -1076,7 +1098,7 @@ def render_analysis(a: dict, symbol: str):
     inf,tech,market,company,risk,setups,opp = a["info"],a["tech"],a["market"],a["company"],a["risk"],a["setups"],a["opportunity"]
     name=inf.get("longName") or inf.get("shortName") or symbol
     st.header(f"{name} · {symbol}")
-    st.caption(f"V6.0.9 종합분석 · 데이터 기준 {pd.Timestamp(a['frame'].index[-1]).date()} · {a['region']} Market · Sector {a['sector'] or 'N/A'}")
+    st.caption(f"V6.0.10 종합분석 · 데이터 기준 {pd.Timestamp(a['frame'].index[-1]).date()} · {a['region']} Market · Sector {a['sector'] or 'N/A'}")
 
     st.subheader("종합 판단 요약")
     entry_view = entry_decision_view(setups)
@@ -1565,7 +1587,7 @@ def _strategy_validation_text(row, setup: str) -> tuple[str, str]:
         parts.append(f"이 중 20영업일 뒤 상승한 사례 비율은 {hit:.0f}%였습니다.")
     if np.isfinite(med) and np.isfinite(avg):
         gap = abs(avg - med)
-        parts.append(f"대표 수익률(중앙값)은 {med:+.1f}%, 평균 수익률은 {avg:+.1f}%였습니다.")
+        parts.append(f"대표 수익률(20D 중앙값)은 {med:+.1f}%, 기간별 평균 영역의 20D 평균은 {avg:+.1f}%였습니다.")
         if gap >= 6:
             parts.append("평균과 대표 수익률 차이가 커 일부 큰 상승·하락 사례가 평균에 영향을 줬을 가능성이 있습니다.")
         else:
@@ -1660,7 +1682,7 @@ def render_calibration(a: dict, symbol: str):
         """)
 
     run = st.button("과거 진입 검증 실행", type="primary")
-    cache_key = f"calibration_result_v609_{symbol}_{threshold}"
+    cache_key = f"calibration_result_v610_{symbol}_{threshold}"
     if run:
         try:
             with st.spinner("과거 각 거래일의 눌림목·모멘텀 Setup을 재구성하는 중입니다..."):
@@ -1702,42 +1724,69 @@ def render_calibration(a: dict, symbol: str):
 
     st.subheader("4. 진입 방식별 과거 검증")
     p_row, m_row = _cal_row(summary, "Pullback"), _cal_row(summary, "Momentum")
-    cards = st.columns(2)
-    for col, row, setup_name, title in [
-        (cards[0], p_row, "Pullback", "🎯 눌림목 진입 (Pullback)"),
-        (cards[1], m_row, "Momentum", "🚀 모멘텀 진입 (Momentum)"),
-    ]:
-        with col:
-            if row is None:
-                st.markdown(f"<div class='cal-strategy'><div class='v6-kicker'>{title}</div><div class='v6-sub'>검증 자료가 없습니다.</div></div>", unsafe_allow_html=True)
-                continue
+
+    def strategy_card_html(row, setup_name: str, title: str) -> str:
+        if row is None:
+            n = pos = episodes = 0
+            hit = med = mdd = np.nan
+            tone = "자료 부족"
+            explanation = "검증 기준 이상인 과거 Setup 자료가 없어 이 진입 방식의 성과를 해석하기 어렵습니다."
+        else:
             n = int(row.get("Validation 20D", 0))
             pos = int(row.get("Positive 20D", 0))
             episodes = int(row.get("Episodes", 0))
             hit = _safe_num(row, "Hit 20D")
             med = _safe_num(row, "Median 20D")
-            avg = _safe_num(row, "Avg 20D")
             mdd = _safe_num(row, "Avg MDD20")
             tone, explanation = _strategy_validation_text(row, setup_name)
-            confidence, confidence_cls, _ = _validation_sample_confidence(n)
-            # Positive count and hit rate are generated from the same 20D validation cohort.
-            hit_text = f"{pos} / {n} ({hit:.0f}%)" if n and np.isfinite(hit) else "—"
-            med_text = f"{med:+.1f}%" if np.isfinite(med) else "—"
-            avg_text = f"{avg:+.1f}%" if np.isfinite(avg) else "—"
-            mdd_text = f"{mdd:.1f}%" if np.isfinite(mdd) else "—"
-            st.markdown(
-                f"<div class='cal-strategy'><div class='v6-kicker'>{title}</div>"
-                f"<div style='font-weight:900;color:#f8fafc'>{tone}</div>"
-                f"<div class='cal-stat-grid'>"
-                f"<div class='cal-stat'><div class='k'>20D 검증 사례</div><div class='v'>{n}회</div></div>"
-                f"<div class='cal-stat'><div class='k'>20일 후 상승 사례</div><div class='v'>{hit_text}</div></div>"
-                f"<div class='cal-stat'><div class='k'>대표 수익률 · 20D Median</div><div class='v'>{med_text}</div></div>"
-                f"<div class='cal-stat'><div class='k'>평균 수익률 · 20D Average</div><div class='v'>{avg_text}</div></div>"
-                f"<div class='cal-stat'><div class='k'>평균 최대 하락폭 · MDD20</div><div class='v'>{mdd_text}</div></div>"
-                f"<div class='cal-stat'><div class='k'>Setup 구간</div><div class='v'>{episodes}회</div></div>"f"<div class='cal-stat'><div class='k'>기준 이상 거래일</div><div class='v'>{int(row.get('Signals', 0))}일</div></div>"f"<div class='cal-stat'><div class='k'>표본 신뢰도</div><div class='v {confidence_cls}'>{confidence}</div></div>"
-                f"</div><div class='v6-sub'>{explanation}</div></div>",
-                unsafe_allow_html=True,
-            )
+
+        confidence, confidence_cls, _ = _validation_sample_confidence(n)
+        # Positive count and hit rate are generated from the same 20D validation cohort.
+        hit_text = f"{pos} / {n} ({hit:.0f}%)" if n and np.isfinite(hit) else "—"
+        med_text = f"{med:+.1f}%" if np.isfinite(med) else "—"
+        mdd_text = f"{mdd:.1f}%" if np.isfinite(mdd) else "—"
+
+        period_defs = [
+            ("5D", "약 1주", "Avg 5D"),
+            ("10D", "약 2주", "Avg 10D"),
+            ("20D", "약 1개월", "Avg 20D"),
+            ("60D", "약 3개월", "Avg 60D"),
+        ]
+        period_boxes = "".join(
+            f"<div class='cal-period-stat'><div class='k'>{label}</div>"
+            f"<div class='period'>{period}</div><div class='v'>"
+            f"{value:+.1f}%</div></div>"
+            if np.isfinite(value := _safe_num(row, key)) else
+            f"<div class='cal-period-stat'><div class='k'>{label}</div>"
+            f"<div class='period'>{period}</div><div class='v'>—</div></div>"
+            for label, period, key in period_defs
+        )
+
+        return (
+            f"<div class='cal-strategy'><div class='v6-kicker'>{title}</div>"
+            f"<div style='font-weight:900;color:#f8fafc'>{tone}</div>"
+            f"<div class='cal-stat-grid'>"
+            f"<div class='cal-stat'><div class='k'>20D 검증 사례</div><div class='v'>{n}회</div></div>"
+            f"<div class='cal-stat'><div class='k'>20일 후 상승 사례</div><div class='v'>{hit_text}</div></div>"
+            f"<div class='cal-stat'><div class='k'>대표 수익률 · 20D Median</div><div class='v'>{med_text}</div></div>"
+            f"<div class='cal-stat'><div class='k'>평균 최대 하락폭 · MDD20</div><div class='v'>{mdd_text}</div></div>"
+            f"<div class='cal-stat'><div class='k'>Setup 구간</div><div class='v'>{episodes}회</div></div>"
+            f"<div class='cal-stat'><div class='k'>표본 신뢰도</div><div class='v {confidence_cls}'>{confidence}</div></div>"
+            f"</div><div class='v6-sub cal-interpretation'>{explanation}</div>"
+            f"<div class='cal-period-section'><div class='cal-period-title'>기간별 평균 수익률"
+            f"<span>Average return by holding period</span></div>"
+            f"<div class='cal-period-grid'>{period_boxes}</div>"
+            f"<div class='cal-period-note'>검증 Setup 시작일 종가 대비 평균 성과입니다. "
+            f"5D 약 1주, 10D 약 2주, 20D 약 1개월, 60D 약 3개월의 흐름을 참고합니다. "
+            f"<strong>60D는 진입 정확도보다 이후 추세 지속성을 보는 참고값입니다.</strong></div>"
+            f"</div></div>"
+        )
+
+    strategy_cards = "".join([
+        strategy_card_html(p_row, "Pullback", "🎯 눌림목 진입 (Pullback)"),
+        strategy_card_html(m_row, "Momentum", "🚀 모멘텀 진입 (Momentum)"),
+    ])
+    st.markdown(f"<div class='cal-strategy-grid'>{strategy_cards}</div>", unsafe_allow_html=True)
 
     st.markdown("<div class='v6-section'></div>", unsafe_allow_html=True)
     st.subheader("5. 현재 신호 × 과거 검증")
@@ -1810,9 +1859,9 @@ def render_calibration(a: dict, symbol: str):
 - **20D 검증 사례**: 20영업일 성과 구간이 너무 겹치지 않도록 Setup 구간 시작일끼리 최소 20거래일 간격을 둔 사례입니다. 메인 20D 해석은 이 사례를 기준으로 계산합니다.
 - **20일 후 상승 비율**: 20D 검증 사례 중 20영업일 뒤 주가가 신호 시작일보다 높았던 비율입니다. 미래 상승확률을 뜻하지 않습니다.
 - **대표 수익률 (Median)**: 20D 검증 사례들의 수익률을 순서대로 세웠을 때 가운데 값입니다. 몇 번의 큰 급등·급락 영향이 적어 **'보통 사례가 어느 정도였는가'**를 볼 때 유용합니다.
-- **평균 수익률 (Average)**: 모든 20D 검증 사례의 수익률을 더해 나눈 값입니다. 큰 급등 한두 번이 있으면 대표 수익률보다 높아질 수 있습니다.
+- **기간별 평균 수익률 (Average)**: 같은 20D 검증 사례를 기준으로 Setup 시작일 종가 대비 5D·10D·20D·60D 시점의 평균 성과를 보여줍니다. 5D 약 1주, 10D 약 2주, 20D 약 1개월, 60D 약 3개월의 흐름입니다.
 - **평균 최대 하락폭 (MDD20)**: 진입 후 20영업일 동안 중간에 얼마나 크게 밀렸는지를 평균낸 값입니다. 0에 가까울수록 진입 후 흔들림이 작았다는 뜻입니다.
-- **평균 60D**: 같은 20D 검증 사례를 60영업일까지 추적한 보조 수치입니다. 사례 시작 간격은 20거래일이므로 60D 구간끼리는 일부 겹칠 수 있어 장기 참고값으로만 봅니다.
+- **평균 60D**: 진입 정확도보다 이후 추세 지속성을 보는 참고값입니다. 사례 시작 간격은 20거래일이므로 60D 구간끼리는 일부 겹칠 수 있어 장기 참고값으로만 봅니다.
         """)
         if (summary["Validation 20D"] < 5).any():
             st.warning("20D 검증 사례가 5개 미만인 진입 방식이 있습니다. 해당 결과는 참고 수준으로만 보고 기준을 낮추거나 더 긴 데이터가 확보된 뒤 다시 비교하는 편이 좋습니다.")
@@ -1826,7 +1875,7 @@ def render_calibration(a: dict, symbol: str):
 
 # -------------------- App shell --------------------
 st.title("Stock Analyzer by Kijungnam")
-st.caption("V6.0.9 · MULTI-LENS SETUP & DECISION SYSTEM · Decision Summary & Consensus")
+st.caption("V6.0.10 · MULTI-LENS SETUP & DECISION SYSTEM · Decision Summary & Consensus")
 
 with st.expander("🔥 V6 종목 스캐너 · 시장 전체 후보 찾기", expanded=False):
     render_scanner_section()
@@ -1851,7 +1900,7 @@ st.divider()
 analysis=None
 if symbol and mode in ("📊 종합분석","🎯 퀀트분석","🧩 옵션분석","🧪 과거 진입 검증"):
     try:
-        with st.spinner(f"{symbol} · V6.0.9 엔진을 계산하는 중입니다..."): analysis=build_full_analysis(symbol)
+        with st.spinner(f"{symbol} · V6.0.10 엔진을 계산하는 중입니다..."): analysis=build_full_analysis(symbol)
     except Exception as exc: st.error(f"분석을 계산하지 못했습니다: {exc}")
 
 if mode=="📊 종합분석":
