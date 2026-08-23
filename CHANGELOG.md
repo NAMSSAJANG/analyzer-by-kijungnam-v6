@@ -1,6 +1,9 @@
+## V6.0.8
+- Adjusted Calibration strategy card layout to prevent text clipping by removing fixed card height and increasing stat box space.
+
 # Changelog
 
-## V6.0.7
+## V6.0.8
 - Renamed Calibration to **과거 진입 검증 (Entry Calibration)** and reorganized it around current-entry validation.
 - Pulls the current Pullback / Momentum scores and readiness directly from the main analysis.
 - Clarifies that the shared threshold selects historical validation cases and does not modify the current Entry score.

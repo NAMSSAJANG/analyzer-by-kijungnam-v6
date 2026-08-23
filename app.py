@@ -29,7 +29,7 @@ from setup_engine import build_setups
 from sr_engine import build_zones
 from technical_engine import build_technical_snapshot
 
-st.set_page_config(page_title="Stock Analyzer V6.0.7", page_icon="📈", layout="wide")
+st.set_page_config(page_title="Stock Analyzer V6.0.8", page_icon="📈", layout="wide")
 
 DB_FILE = Path(os.getenv("ANALYZER_DB_FILE", ".data/stock_analyzer_v6.sqlite"))
 HISTORY = SQLiteHistoryStore(DB_FILE)
@@ -156,7 +156,7 @@ h1,h2,h3{letter-spacing:-.025em}
 .pulse-shell{box-sizing:border-box;border:1px solid #29415e;border-radius:13px;padding:14px;background:#0d1b2d;min-height:174px;margin-bottom:10px}
 .pulse-head{display:flex;justify-content:space-between;gap:8px;align-items:baseline}.pulse-head b{color:#f8fafc}.pulse-up{color:#34d399}.pulse-down{color:#fb7185}
 .cal-help{border:1px solid #315272;background:#0d1b2d;border-radius:14px;padding:15px 17px;line-height:1.72;color:#cbd5e1;margin:8px 0 15px}
-.cal-current{box-sizing:border-box;border:1px solid #29415e;border-radius:15px;padding:18px 19px;background:#0d1b2d;min-height:190px;height:190px;margin-bottom:14px}.cal-current .score{font-size:2rem;font-weight:900;line-height:1.1;margin:8px 0}.cal-current .state{font-weight:850;margin-bottom:8px}.cal-compare{border:1px solid #315272;border-radius:16px;padding:18px 20px;background:linear-gradient(135deg,#0d1b2d,#10243a);margin:12px 0 20px;line-height:1.72}.cal-strategy{box-sizing:border-box;border:1px solid #29415e;border-radius:16px;padding:19px 20px;background:#0d1b2d;min-height:410px;height:410px;margin-bottom:18px;overflow:auto}.cal-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.cal-stat{border:1px solid #20344d;border-radius:11px;background:#0a1728;padding:10px 12px}.cal-stat .k{color:#94a3b8;font-size:.76rem;font-weight:800}.cal-stat .v{font-size:1.18rem;font-weight:900;margin-top:4px;color:#f8fafc}.cal-tag{display:inline-block;border-radius:99px;padding:4px 9px;font-size:.78rem;font-weight:850;margin-left:6px}.cal-tag.ok{background:#123c32;color:#6ee7b7}.cal-tag.wait{background:#49371b;color:#fbbf24}.cal-tag.bad{background:#4a2028;color:#fda4af}.cal-style{border:1px solid #315272;border-radius:16px;padding:20px;background:#0a1728;margin:10px 0 20px}.cal-style h3{margin:.15rem 0 .65rem}.cal-section-note{color:#94a3b8;line-height:1.7;margin:-5px 0 14px}
+.cal-current{box-sizing:border-box;border:1px solid #29415e;border-radius:15px;padding:18px 19px;background:#0d1b2d;min-height:190px;height:auto;margin-bottom:14px}.cal-current .score{font-size:2rem;font-weight:900;line-height:1.1;margin:8px 0}.cal-current .state{font-weight:850;margin-bottom:8px}.cal-compare{border:1px solid #315272;border-radius:16px;padding:18px 20px;background:linear-gradient(135deg,#0d1b2d,#10243a);margin:12px 0 20px;line-height:1.72}.cal-strategy{box-sizing:border-box;border:1px solid #29415e;border-radius:16px;padding:19px 20px;background:#0d1b2d;min-height:470px;height:auto;margin-bottom:18px;overflow:visible}.cal-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.cal-stat{border:1px solid #20344d;border-radius:11px;background:#0a1728;padding:10px 12px;min-height:88px}.cal-stat .k{color:#94a3b8;font-size:.76rem;font-weight:800;line-height:1.35}.cal-stat .v{font-size:1.18rem;font-weight:900;margin-top:4px;color:#f8fafc;line-height:1.25}.cal-tag{display:inline-block;border-radius:99px;padding:4px 9px;font-size:.78rem;font-weight:850;margin-left:6px}.cal-tag.ok{background:#123c32;color:#6ee7b7}.cal-tag.wait{background:#49371b;color:#fbbf24}.cal-tag.bad{background:#4a2028;color:#fda4af}.cal-style{border:1px solid #315272;border-radius:16px;padding:20px;background:#0a1728;margin:10px 0 20px}.cal-style h3{margin:.15rem 0 .65rem}.cal-section-note{color:#94a3b8;line-height:1.7;margin:-5px 0 14px}
 .delta-card{box-sizing:border-box;border:1px solid #29415e;border-radius:12px;padding:12px 14px;background:#0d1b2d;min-height:92px;margin:4px 0 14px}.delta-label{color:#94a3b8;font-size:.78rem;font-weight:800;line-height:1.4}.delta-value{font-size:1.22rem;font-weight:900;margin-top:6px}.delta-change{font-size:.83rem;font-weight:800;margin-left:7px}
 .risk-summary{border:1px solid #29415e;border-radius:12px;padding:13px 16px;background:#0a1728;margin:4px 0 10px;color:#cbd5e1;line-height:1.65}.consensus-summary{border:1px solid #315272;border-radius:16px;padding:18px 20px;background:linear-gradient(135deg,#0d1b2d,#10243a);margin:10px 0 16px;line-height:1.75;color:#dbeafe}.consensus-meter{border:1px solid #29415e;border-radius:13px;padding:14px 16px;background:#0a1728;min-height:104px}.consensus-meter .label{color:#94a3b8;font-size:.8rem;font-weight:800}.consensus-meter .value{font-size:1.7rem;font-weight:900;margin-top:7px;color:#f8fafc}
 .entry-decision-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:18px 0 12px}.entry-decision-card{box-sizing:border-box;border:1px solid #29415e;border-radius:14px;padding:16px 17px;background:#0a1728;min-height:122px}.entry-decision-label{color:#94a3b8;font-size:.76rem;font-weight:850;line-height:1.45}.entry-decision-value{font-size:1.34rem;font-weight:900;margin-top:9px;line-height:1.35}.entry-decision-interpretation{border:1px solid #315272;border-radius:14px;padding:17px 19px;background:linear-gradient(135deg,#0d1b2d,#10243a);color:#dbeafe;line-height:1.75;margin-bottom:18px}.entry-decision-interpretation b{color:#f8fafc}
@@ -1076,7 +1076,7 @@ def render_analysis(a: dict, symbol: str):
     inf,tech,market,company,risk,setups,opp = a["info"],a["tech"],a["market"],a["company"],a["risk"],a["setups"],a["opportunity"]
     name=inf.get("longName") or inf.get("shortName") or symbol
     st.header(f"{name} · {symbol}")
-    st.caption(f"V6.0.7 종합분석 · 데이터 기준 {pd.Timestamp(a['frame'].index[-1]).date()} · {a['region']} Market · Sector {a['sector'] or 'N/A'}")
+    st.caption(f"V6.0.8 종합분석 · 데이터 기준 {pd.Timestamp(a['frame'].index[-1]).date()} · {a['region']} Market · Sector {a['sector'] or 'N/A'}")
 
     st.subheader("종합 판단 요약")
     entry_view = entry_decision_view(setups)
@@ -1791,7 +1791,7 @@ def render_calibration(a: dict, symbol: str):
 
 # -------------------- App shell --------------------
 st.title("Stock Analyzer by Kijungnam")
-st.caption("V6.0.7 · MULTI-LENS SETUP & DECISION SYSTEM · Decision Summary & Consensus")
+st.caption("V6.0.8 · MULTI-LENS SETUP & DECISION SYSTEM · Decision Summary & Consensus")
 
 with st.expander("🔥 V6 종목 스캐너 · 시장 전체 후보 찾기", expanded=False):
     render_scanner_section()
@@ -1816,7 +1816,7 @@ st.divider()
 analysis=None
 if symbol and mode in ("📊 종합분석","🎯 퀀트분석","🧩 옵션분석","🧪 과거 진입 검증"):
     try:
-        with st.spinner(f"{symbol} · V6.0.7 엔진을 계산하는 중입니다..."): analysis=build_full_analysis(symbol)
+        with st.spinner(f"{symbol} · V6.0.8 엔진을 계산하는 중입니다..."): analysis=build_full_analysis(symbol)
     except Exception as exc: st.error(f"분석을 계산하지 못했습니다: {exc}")
 
 if mode=="📊 종합분석":
