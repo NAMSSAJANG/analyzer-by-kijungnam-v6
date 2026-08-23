@@ -1,3 +1,13 @@
+# V6.0.13
+
+- Reworked Entry Calibration sampling so low thresholds (30-50) do not collapse into only a few episode-start cases.
+- Clarified that a threshold means Entry Score >= selected value (e.g. 40 means 40-100).
+- Separated qualifying days, Setup episodes, and horizon-specific validation dates.
+- Added independent 5D/10D/20D/60D sampling gaps and sample counts.
+- Added sample concentration checks across Setup episodes and a "국면 집중" warning.
+- Added actual 20D validation dates, Entry Scores, reference closes, forward returns, and MDD for auditability.
+- Kept the 30-90 slider with 5-point steps and 75 default.
+
 ## V6.0.12
 - Expanded Entry Calibration threshold range to **30~90** with **5-point steps** while keeping 75 as the default.
 - Added plain-language guidance that low thresholds are for score-discrimination testing, not relaxed buy recommendations.

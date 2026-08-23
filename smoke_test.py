@@ -71,7 +71,11 @@ def main():
 
     detail, summary = run_setup_calibration(frame, bench, threshold=60)
     assert not detail.empty
-    assert {"Signals","Episodes","Validation 20D","Positive 20D","Median 20D"}.issubset(summary.columns)
+    required = {
+        "Signals","Episodes","Validation 5D","Validation 10D","Validation 20D","Validation 60D",
+        "Validation Episodes 20D","Max Episode Share 20D","Positive 20D","Median 20D"
+    }
+    assert required.issubset(summary.columns)
     for _, row in summary.iterrows():
         n = int(row["Validation 20D"])
         pos = int(row["Positive 20D"])
@@ -79,6 +83,18 @@ def main():
         assert 0 <= pos <= n
         if n > 0:
             assert abs(float(hit) - (pos / n * 100)) < 1e-9
+        assert int(row["Validation Episodes 20D"]) <= int(row["Episodes"])
+
+    # Low thresholds must remain usable even when one long setup episode persists:
+    # validation dates are drawn from qualifying days at horizon-specific gaps,
+    # not only from episode starts.
+    low_detail, low_summary = run_setup_calibration(frame, bench, threshold=30)
+    assert not low_detail.empty
+    for prefix in ("pullback", "momentum"):
+        assert f"{prefix}_sample_20d" in low_detail.columns
+        positions = list(np.flatnonzero(low_detail[f"{prefix}_sample_20d"].to_numpy(dtype=bool)))
+        if len(positions) > 1:
+            assert min(np.diff(positions)) >= 20
 
     with tempfile.TemporaryDirectory() as tmp:
         store=SQLiteHistoryStore(Path(tmp)/"history.sqlite")

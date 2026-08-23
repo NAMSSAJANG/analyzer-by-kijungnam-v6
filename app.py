@@ -29,7 +29,7 @@ from setup_engine import build_setups
 from sr_engine import build_zones
 from technical_engine import build_technical_snapshot
 
-st.set_page_config(page_title="Stock Analyzer V6.0.12", page_icon="📈", layout="wide")
+st.set_page_config(page_title="Stock Analyzer V6.0.13", page_icon="📈", layout="wide")
 
 DB_FILE = Path(os.getenv("ANALYZER_DB_FILE", ".data/stock_analyzer_v6.sqlite"))
 HISTORY = SQLiteHistoryStore(DB_FILE)
@@ -1330,7 +1330,7 @@ def render_analysis(a: dict, symbol: str):
     inf,tech,market,company,risk,setups,opp = a["info"],a["tech"],a["market"],a["company"],a["risk"],a["setups"],a["opportunity"]
     name=inf.get("longName") or inf.get("shortName") or symbol
     st.header(f"{name} · {symbol}")
-    st.caption(f"V6.0.12 핵심 분석 · 데이터 기준 {pd.Timestamp(a['frame'].index[-1]).date()} · {a['region']} Market · Sector {a['sector'] or 'N/A'}")
+    st.caption(f"V6.0.13 핵심 분석 · 데이터 기준 {pd.Timestamp(a['frame'].index[-1]).date()} · {a['region']} Market · Sector {a['sector'] or 'N/A'}")
 
     st.subheader("종합 판단 요약")
     entry_view = entry_decision_view(setups)
@@ -1779,15 +1779,29 @@ def _safe_num(row, key: str, default=np.nan):
         return default
 
 
-def _validation_sample_confidence(n: int) -> tuple[str, str, str]:
-    """Readable sample-size guide for 20D non-overlapping validation cases."""
+def _validation_sample_confidence(n: int, represented_episodes: int = 0, max_episode_share: float = np.nan) -> tuple[str, str, str]:
+    """Readable guide using both sample count and episode concentration."""
     if n < 5:
-        return "매우 제한적", "status-red", "검증 사례가 적어 결과 변동성이 큽니다. 참고 수준으로만 보세요."
-    if n < 10:
-        return "제한적", "status-orange", "방향성은 참고할 수 있지만 몇 사례의 영향이 크게 남을 수 있습니다."
-    if n < 15:
-        return "참고 가능", "status-yellow", "반복되는 경향을 보기 시작할 수 있으나 시장 국면 차이를 함께 확인해야 합니다."
-    return "비교적 충분", "status-green", "현재 검증창의 20D 비중복 기준에서는 비교적 많은 사례가 확보됐습니다. 그래도 미래 확률로 해석하지 않습니다."
+        label, cls, note = "자료 부족", "status-red", "20D 검증 사례가 5회 미만이라 결과 변동성이 매우 큽니다. 참고 수준으로만 보세요."
+    elif n < 10:
+        label, cls, note = "제한적", "status-orange", "방향성은 참고할 수 있지만 몇 사례의 영향이 크게 남을 수 있습니다."
+    elif n < 20:
+        label, cls, note = "참고 가능", "status-yellow", "반복되는 경향을 보기 시작할 수 있는 표본입니다."
+    elif n < 40:
+        label, cls, note = "비교적 충분", "status-green", "현재 검증창에서는 비교적 많은 20D 사례가 확보됐습니다."
+    else:
+        label, cls, note = "충분", "status-green", "현재 검증창에서는 20D 사례 수가 충분한 편입니다."
+
+    concentrated = n >= 5 and (represented_episodes < 3 or (np.isfinite(max_episode_share) and max_episode_share >= 70))
+    if concentrated:
+        label += " · 국면 집중"
+        if cls == "status-green":
+            cls = "status-yellow"
+        share_text = f" 최대 한 Setup 구간이 20D 사례의 {max_episode_share:.0f}%를 차지합니다." if np.isfinite(max_episode_share) else ""
+        note += f" 다만 20D 사례가 {represented_episodes}개의 Setup 구간에만 걸쳐 있어 특정 시장 국면의 영향이 클 수 있습니다.{share_text}"
+    else:
+        note += " 사례 수와 함께 서로 다른 Setup 구간에 얼마나 분산되어 있는지도 같이 확인하세요."
+    return label, cls, note
 
 
 def _calibration_style(summary: pd.DataFrame) -> tuple[str, str, str]:
@@ -1798,6 +1812,18 @@ def _calibration_style(summary: pd.DataFrame) -> tuple[str, str, str]:
     p_n, m_n = int(p.get("Validation 20D", 0)), int(m.get("Validation 20D", 0))
     if p_n < 5 and m_n < 5:
         return "❔ 판단 자료 부족", "status-muted", "20D 검증 사례가 적어 눌림목형·모멘텀형을 구분하기에는 아직 표본이 부족합니다."
+
+    def concentration_note(row) -> str:
+        n = int(row.get("Validation 20D", 0))
+        eps = int(row.get("Validation Episodes 20D", 0))
+        share = _safe_num(row, "Max Episode Share 20D")
+        if n >= 5 and (eps < 3 or (np.isfinite(share) and share >= 70)):
+            return " 다만 일부 20D 사례가 소수의 장기 Setup 구간에 집중되어 있어 시장 국면 편향 가능성을 함께 봐야 합니다."
+        return ""
+
+    style_caution = ""
+    if concentration_note(p) or concentration_note(m):
+        style_caution = " 다만 일부 20D 사례가 소수의 장기 Setup 구간에 집중되어 있어 시장 국면 편향 가능성을 함께 봐야 합니다."
 
     p_points = m_points = 0
     p_med, m_med = _safe_num(p, "Median 20D"), _safe_num(m, "Median 20D")
@@ -1814,11 +1840,11 @@ def _calibration_style(summary: pd.DataFrame) -> tuple[str, str, str]:
         m_points += m_mdd > p_mdd
 
     if p_n >= 5 and p_points >= 2 and p_points > m_points:
-        return "🎯 눌림목형", "status-teal", "이 검증기간에서는 강한 상승을 추격하기보다 조정·지지 구간을 활용한 눌림목 접근이 상대적으로 더 안정적이거나 효율적인 결과를 보였습니다."
+        return "🎯 눌림목형", "status-teal", "이 검증기간에서는 강한 상승을 추격하기보다 조정·지지 구간을 활용한 눌림목 접근이 상대적으로 더 안정적이거나 효율적인 결과를 보였습니다." + style_caution
     if m_n >= 5 and m_points >= 2 and m_points > p_points:
-        return "🚀 모멘텀형", "status-green", "이 검증기간에서는 조정을 오래 기다리기보다 강한 돌파·추세를 따라가는 모멘텀 접근이 상대적으로 더 좋은 결과를 보였습니다."
+        return "🚀 모멘텀형", "status-green", "이 검증기간에서는 조정을 오래 기다리기보다 강한 돌파·추세를 따라가는 모멘텀 접근이 상대적으로 더 좋은 결과를 보였습니다." + style_caution
     if p_n >= 5 and m_n >= 5:
-        return "⚖️ 혼합형", "status-blue", "두 진입 방식 모두 의미 있는 과거 사례가 있으며 어느 한쪽이 뚜렷하게 우월하다고 보기 어렵습니다. 현재 Setup의 완성도와 Risk를 함께 보는 편이 좋습니다."
+        return "⚖️ 혼합형", "status-blue", "두 진입 방식 모두 의미 있는 과거 사례가 있으며 어느 한쪽이 뚜렷하게 우월하다고 보기 어렵습니다. 현재 Setup의 완성도와 Risk를 함께 보는 편이 좋습니다." + style_caution
     return "❔ 자료 제한", "status-muted", "한쪽 진입 방식의 20D 검증 사례가 부족해 종목의 Entry 성향을 단정하기 어렵습니다. 충분한 사례가 있는 쪽은 참고자료로만 활용하세요."
 
 
@@ -1833,7 +1859,9 @@ def _strategy_validation_text(row, setup: str) -> tuple[str, str]:
     med = _safe_num(row, "Median 20D")
     avg = _safe_num(row, "Avg 20D")
     mdd = _safe_num(row, "Avg MDD20")
-    conf, _, conf_note = _validation_sample_confidence(n)
+    represented = int(row.get("Validation Episodes 20D", 0))
+    max_share = _safe_num(row, "Max Episode Share 20D")
+    conf, _, conf_note = _validation_sample_confidence(n, represented, max_share)
 
     if n < 5:
         tone = "자료 제한"
@@ -1844,7 +1872,7 @@ def _strategy_validation_text(row, setup: str) -> tuple[str, str]:
     else:
         tone = "과거 결과 혼조"
 
-    parts = [f"Setup 구간은 {episodes}회였고, 20영업일 성과가 서로 지나치게 겹치지 않도록 최소 20거래일 간격으로 추린 검증 사례 {n}회를 기준으로 봅니다."]
+    parts = [f"기준 이상 상태는 {episodes}개의 Setup 구간으로 묶였고, 그 안의 기준 이상 거래일에서 서로 최소 20거래일 이상 떨어진 20D 검증 기준일 {n}회를 사용했습니다."]
     if np.isfinite(hit):
         parts.append(f"이 중 20영업일 뒤 상승한 사례 비율은 {hit:.0f}%였습니다.")
     if np.isfinite(med) and np.isfinite(avg):
@@ -1908,7 +1936,7 @@ def render_calibration(a: dict, symbol: str):
 
     st.markdown("<div class='v6-section'></div>", unsafe_allow_html=True)
     st.subheader("2. 과거 검증 기준")
-    st.markdown("<div class='cal-section-note'>이 기준은 현재 Entry 점수를 바꾸는 값이 아닙니다. 과거 사례 중 어느 정도 이상을 '강한 Setup 검증 사례'로 포함할지 정하는 기준선이며, 눌림목과 모멘텀에 동일하게 적용됩니다.</div>", unsafe_allow_html=True)
+    st.markdown("<div class='cal-section-note'>이 기준은 현재 Entry 점수를 바꾸는 값이 아닙니다. 선택한 점수 <b>이상(≥)</b>의 과거 상태를 검증 대상으로 포함하는 기준선이며, 눌림목과 모멘텀에 동일하게 적용됩니다. 예: 40점 선택 → 40~100점 사례 포함.</div>", unsafe_allow_html=True)
     threshold = st.slider(
         "검증 사례 포함 기준점수",
         min_value=30, max_value=90, value=75, step=5,
@@ -1933,7 +1961,7 @@ def render_calibration(a: dict, symbol: str):
         return f"<b>{name}</b> {score:.1f}점 <span class='cal-tag {cls}'>{symbol_} {tag}</span>"
 
     st.markdown(
-        f"<div class='cal-help'><b>검증 기준 {threshold} / 100</b><br>"
+        f"<div class='cal-help'><b>검증 기준 {threshold}점 이상 (≥ {threshold})</b><br><span class='v6-sub'>{threshold}~100점의 과거 Entry 상태를 검증 대상으로 포함합니다.</span><br><br>"
         f"{current_threshold_line('눌림목 진입', pull.score)}<br>"
         f"{current_threshold_line('모멘텀 진입', mom.score)}<br><br>"
         f"<span class='status-yellow'>{mode_txt}</span></div>",
@@ -1945,12 +1973,15 @@ def render_calibration(a: dict, symbol: str):
 - 현재 종합분석의 **눌림목 진입 {pull.score:.1f}점 / 모멘텀 진입 {mom.score:.1f}점**을 그대로 표시합니다.
 - **검증 기준 {threshold}점**은 과거 사례를 골라내기 위한 기준입니다. 현재 Entry 점수를 {threshold}점으로 보정하는 값이 아닙니다.
 - 슬라이더는 **30~90점 / 5점 단위**이며 기본값은 75점입니다. 낮은 기준점수는 매수 조건을 느슨하게 만들기 위한 것이 아니라, 30점대부터 80점대까지 점수가 높아질수록 과거 성과가 실제로 개선되는지 비교하기 위한 Calibration 용도입니다.
-- 과거 각 거래일에서 눌림목 또는 모멘텀 점수가 {threshold}점 이상이면 해당 전략의 검증 후보로 분류합니다.
+- 과거 각 거래일에서 눌림목 또는 모멘텀 점수가 **{threshold}점 이상(≥ {threshold})**이면 해당 전략의 검증 후보가 됩니다. 즉 {threshold}점 선택은 {threshold}~100점 전체를 포함합니다.
+- **Setup 구간**은 기준 이상 상태가 이어지는 큰 국면을 뜻합니다. 기준 아래 상태가 3거래일 이상 지속된 뒤 다시 기준 이상이 되면 새로운 Setup 구간으로 분리합니다.
+- **성과 검증 기준일**은 Setup 시작일과 다를 수 있습니다. 같은 Setup이 길게 유지되면 그 안에서도 5D는 최소 5거래일, 10D는 10거래일, 20D는 20거래일, 60D는 60거래일 간격으로 추가 기준일을 선택합니다. 낮은 Threshold에서 하나의 긴 Setup 때문에 표본이 지나치게 줄어드는 문제를 피하기 위한 방식입니다.
+- 각 성과는 **선택된 검증 기준일의 종가**를 기준가격으로 삼아 5·10·20·60영업일 후 수익률을 계산합니다.
 - Calibration에서는 과거 시점 재무 데이터 누출을 피하기 위해 **가격·거래량·기술 구조 중심**으로 재계산하며, 과거 Market Regime 데이터가 아직 완전하지 않아 시장 점수는 50점(중립)으로 고정합니다. 따라서 종합분석의 오늘 점수와 과거 재계산 점수는 완전히 같은 조건은 아닙니다.
         """)
 
     run = st.button("과거 진입 검증 실행", type="primary")
-    cache_key = f"calibration_result_v612_{symbol}_{threshold}"
+    cache_key = f"calibration_result_v613_{symbol}_{threshold}"
     if run:
         try:
             with st.spinner("과거 각 거래일의 눌림목·모멘텀 Setup을 재구성하는 중입니다..."):
@@ -1974,11 +2005,12 @@ def render_calibration(a: dict, symbol: str):
         st.caption(f"검증 신호 평가 구간 · {detail['date'].iloc[0]} ~ {detail['date'].iloc[-1]} · 공통 기준 {threshold}점")
         st.markdown(
             f"<div class='cal-help'><b>이번 검증에서 사례를 세는 기준</b><br>"
-            f"① <b>기준 이상 거래일</b> · Entry 점수가 {threshold}점 이상인 모든 거래일<br>"
-            f"② <b>Setup 구간</b> · 같은 강한 신호가 이어지는 기간을 한 구간으로 묶습니다. 기준 아래 상태가 <b>3거래일 이상</b> 이어진 뒤 다시 {threshold}점 이상이 되면 새 구간으로 봅니다.<br>"
-            f"③ <b>20D 검증 사례</b> · 20영업일 뒤 성과가 서로 과도하게 겹치지 않도록 Setup 구간 시작일끼리 <b>최소 20거래일</b> 간격을 둡니다.<br>"
-            f"④ <b>성과 기준</b> · 구간 시작일 종가 대비 5·10·20·60영업일 후 수익률과, 첫 20영업일 동안의 최대 하락폭을 봅니다.<br><br>"
-            f"<span class='v6-sub'>Entry 계산에는 각 과거 시점까지 최소 약 230거래일의 가격 이력을 확보하고, 최근 최대 420거래일 범위에서 검증합니다. 60영업일 이후 성과를 계산할 수 있도록 최신 약 60거래일은 새 검증 신호 후보에서 제외합니다.</span></div>",
+            f"① <b>기준 이상 거래일</b> · Entry 점수가 <b>{threshold}점 이상(≥ {threshold})</b>인 모든 거래일. 즉 {threshold}~100점 상태를 포함합니다.<br>"
+            f"② <b>Setup 구간</b> · 기준 이상 상태가 이어지는 큰 국면입니다. 기준 아래 상태가 <b>3거래일 이상</b> 이어진 뒤 다시 기준 이상이 되면 새 구간으로 봅니다.<br>"
+            f"③ <b>성과 검증 기준일</b> · 같은 Setup이 오래 이어져도 추가 표본을 만들 수 있습니다. 기준 이상 거래일 중 5D는 <b>5거래일</b>, 10D는 <b>10거래일</b>, 20D는 <b>20거래일</b>, 60D는 <b>60거래일</b> 이상 떨어진 날짜를 각각 선택해 성과 겹침을 줄입니다.<br>"
+            f"④ <b>기준가격</b> · 각 성과 검증 기준일의 종가입니다. Setup 시작일 종가로 고정하지 않습니다.<br>"
+            f"⑤ <b>성과 기준</b> · 기준가격 대비 5·10·20·60영업일 후 수익률과, 20D 기준일 이후 첫 20영업일의 최대 하락폭을 봅니다.<br><br>"
+            f"<span class='v6-sub'>Entry 계산에는 각 과거 시점까지 최소 약 230거래일의 가격 이력을 확보하고, 최근 최대 420거래일 범위에서 검증합니다. 각 기간의 미래 가격이 실제로 존재하는 날짜만 해당 기간의 검증 사례로 사용하므로 5D·10D·20D·60D의 사례 수는 서로 다를 수 있습니다.</span></div>",
             unsafe_allow_html=True,
         )
 
@@ -2012,9 +2044,14 @@ def render_calibration(a: dict, symbol: str):
             avg10 = _safe_num(row, "Avg 10D")
             avg20 = _safe_num(row, "Avg 20D")
             avg60 = _safe_num(row, "Avg 60D")
+            n5 = int(row.get("Validation 5D", 0))
+            n10 = int(row.get("Validation 10D", 0))
+            n60 = int(row.get("Validation 60D", 0))
             mdd = _safe_num(row, "Avg MDD20")
             tone, explanation = _strategy_validation_text(row, setup_name)
-            confidence, confidence_cls, _ = _validation_sample_confidence(n)
+            represented = int(row.get("Validation Episodes 20D", 0))
+            max_share = _safe_num(row, "Max Episode Share 20D")
+            confidence, confidence_cls, _ = _validation_sample_confidence(n, represented, max_share)
             # Positive count and hit rate are generated from the same 20D validation cohort.
             hit_text = f"{pos} / {n} ({hit:.0f}%)" if n and np.isfinite(hit) else "—"
             med_text = f"{med:+.1f}%" if np.isfinite(med) else "—"
@@ -2038,10 +2075,10 @@ def render_calibration(a: dict, symbol: str):
                 f"<div class='cal-stat'><div class='k'>표본 신뢰도</div><div class='v {confidence_cls}'>{confidence}</div></div>"
                 f"</div>"
                 f"<div class='cal-period-title'>기간별 평균 수익률</div><div class='cal-period-grid'>"
-                f"<div class='cal-period'><div class='k'>5D · 약 1주</div><div class='v'>{period_vals['5D']}</div></div>"
-                f"<div class='cal-period'><div class='k'>10D · 약 2주</div><div class='v'>{period_vals['10D']}</div></div>"
-                f"<div class='cal-period'><div class='k'>20D · 약 1개월</div><div class='v'>{period_vals['20D']}</div></div>"
-                f"<div class='cal-period'><div class='k'>60D · 약 3개월</div><div class='v'>{period_vals['60D']}</div></div>"
+                f"<div class='cal-period'><div class='k'>5D · 약 1주</div><div class='v'>{period_vals['5D']}</div><div class='k'>n={n5}</div></div>"
+                f"<div class='cal-period'><div class='k'>10D · 약 2주</div><div class='v'>{period_vals['10D']}</div><div class='k'>n={n10}</div></div>"
+                f"<div class='cal-period'><div class='k'>20D · 약 1개월</div><div class='v'>{period_vals['20D']}</div><div class='k'>n={n}</div></div>"
+                f"<div class='cal-period'><div class='k'>60D · 약 3개월</div><div class='v'>{period_vals['60D']}</div><div class='k'>n={n60}</div></div>"
                 f"</div><div class='cal-period-note'>5D·10D·20D는 진입 후 성과가 어떻게 전개되는지 보고, 60D는 진입 정확도보다는 이후 추세 지속성을 확인하는 장기 참고값으로 봅니다.</div>"
                 f"<div class='v6-sub'>{explanation}</div></div>",
                 unsafe_allow_html=True,
@@ -2085,7 +2122,12 @@ def render_calibration(a: dict, symbol: str):
             "Setup": "진입 방식",
             "Signals": "기준 이상 거래일",
             "Episodes": "Setup 구간",
+            "Validation 5D": "5D 검증 사례",
+            "Validation 10D": "10D 검증 사례",
             "Validation 20D": "20D 검증 사례",
+            "Validation 60D": "60D 검증 사례",
+            "Validation Episodes 20D": "20D 사례 포함 Setup 구간",
+            "Max Episode Share 20D": "최대 Setup 집중도",
             "Positive 20D": "20일 후 상승 사례",
             "Hit 20D": "20일 후 상승 비율",
             "Median 20D": "대표 수익률 20D",
@@ -2097,13 +2139,15 @@ def render_calibration(a: dict, symbol: str):
         }).copy()
         shown["진입 방식"] = shown["진입 방식"].map({"Pullback": "눌림목 진입 (Pullback)", "Momentum": "모멘텀 진입 (Momentum)"}).fillna(shown["진입 방식"])
         visible_cols = [
-            "진입 방식", "기준 이상 거래일", "Setup 구간", "20D 검증 사례", "20일 후 상승 사례",
+            "진입 방식", "기준 이상 거래일", "Setup 구간", "5D 검증 사례", "10D 검증 사례", "20D 검증 사례", "60D 검증 사례",
+            "20D 사례 포함 Setup 구간", "최대 Setup 집중도", "20일 후 상승 사례",
             "20일 후 상승 비율", "대표 수익률 20D", "평균 5D", "평균 10D", "평균 20D",
             "평균 60D", "평균 최대 하락폭 20D",
         ]
         shown = shown[[c for c in visible_cols if c in shown.columns]]
         fmt = {
             "20일 후 상승 비율": "{:.1f}%",
+            "최대 Setup 집중도": "{:.1f}%",
             "대표 수익률 20D": "{:+.2f}%",
             "평균 5D": "{:+.2f}%",
             "평균 10D": "{:+.2f}%",
@@ -2114,27 +2158,56 @@ def render_calibration(a: dict, symbol: str):
         st.dataframe(shown.style.format(fmt, na_rep="—"), hide_index=True, use_container_width=True)
         st.markdown("""
 **쉽게 읽는 법**
-- **Setup 구간**: 기준점수 이상인 날이 이어지는 구간을 하나로 묶은 횟수입니다. 기준 아래 상태가 3거래일 이상 이어진 뒤 다시 기준 이상이 되면 새로운 구간으로 봅니다.
-- **20D 검증 사례**: 20영업일 성과 구간이 너무 겹치지 않도록 Setup 구간 시작일끼리 최소 20거래일 간격을 둔 사례입니다. 메인 20D 해석은 이 사례를 기준으로 계산합니다.
-- **20일 후 상승 비율**: 20D 검증 사례 중 20영업일 뒤 주가가 신호 시작일보다 높았던 비율입니다. 미래 상승확률을 뜻하지 않습니다.
+- **기준 이상 거래일**: 선택한 점수 이상(예: 40점 선택 시 40~100점)이었던 모든 거래일입니다.
+- **Setup 구간**: 기준 이상 상태가 이어지는 큰 국면의 수입니다. 기준 아래가 3거래일 이상 지속된 뒤 다시 기준 이상이 되면 새 구간으로 봅니다.
+- **5D/10D/20D/60D 검증 사례**: 각 기간의 성과 겹침을 줄이기 위해 기준 이상 거래일 중 각각 최소 5/10/20/60거래일 이상 떨어진 날짜를 선택한 표본입니다. 따라서 같은 긴 Setup에서도 여러 검증 기준일이 나올 수 있고 기간별 사례 수가 서로 다를 수 있습니다.
+- **20일 후 상승 비율**: 20D 검증 사례 중 각 검증 기준일 종가보다 20영업일 뒤 종가가 높았던 비율입니다. 미래 상승확률을 뜻하지 않습니다.
 - **대표 수익률 (Median)**: 20D 검증 사례들의 수익률을 순서대로 세웠을 때 가운데 값입니다. 몇 번의 큰 급등·급락 영향이 적어 **'보통 사례가 어느 정도였는가'**를 볼 때 유용합니다.
 - **평균 수익률 (Average)**: 모든 20D 검증 사례의 수익률을 더해 나눈 값입니다. 큰 급등 한두 번이 있으면 대표 수익률보다 높아질 수 있습니다.
 - **평균 최대 하락폭 (MDD20)**: 진입 후 20영업일 동안 중간에 얼마나 크게 밀렸는지를 평균낸 값입니다. 0에 가까울수록 진입 후 흔들림이 작았다는 뜻입니다.
-- **평균 60D**: 같은 20D 검증 사례를 60영업일까지 추적한 보조 수치입니다. 사례 시작 간격은 20거래일이므로 60D 구간끼리는 일부 겹칠 수 있어 장기 참고값으로만 봅니다.
+- **평균 60D**: 60D 전용 기준일을 최소 60거래일 간격으로 따로 추려 계산합니다. 진입 직후 정확도보다는 이후 추세 지속성을 보는 장기 참고값입니다.
         """)
         if (summary["Validation 20D"] < 5).any():
             st.warning("20D 검증 사례가 5개 미만인 진입 방식이 있습니다. 해당 결과는 참고 수준으로만 보고 기준을 낮추거나 더 긴 데이터가 확보된 뒤 다시 비교하는 편이 좋습니다.")
 
+    with st.expander("실제 20D 검증 기준일 보기"):
+        tabs = st.tabs(["🎯 눌림목 20D 사례", "🚀 모멘텀 20D 사례"])
+        for tab, prefix, score_col, label in [
+            (tabs[0], "pullback", "pullback", "눌림목 진입 (Pullback)"),
+            (tabs[1], "momentum", "momentum", "모멘텀 진입 (Momentum)"),
+        ]:
+            with tab:
+                flag_col = f"{prefix}_sample_20d"
+                ep_col = f"{prefix}_episode"
+                if flag_col not in detail.columns:
+                    st.info("이전 Calibration 캐시 결과입니다. 위의 '과거 진입 검증 실행'을 다시 눌러 최신 사례 산출 방식으로 계산해 주세요.")
+                    continue
+                cases = detail.loc[detail[flag_col]].copy()
+                if cases.empty:
+                    st.info(f"현재 기준에서 {label}의 20D 검증 기준일이 없습니다.")
+                    continue
+                view = cases[["date", ep_col, score_col, "close", "fwd_5d", "fwd_10d", "fwd_20d", "fwd_60d", "mdd_20d"]].copy()
+                view.columns = ["검증 기준일", "Setup 구간 #", "Entry Score", "기준 종가", "5D", "10D", "20D", "60D", "MDD20"]
+                st.dataframe(
+                    view.style.format({
+                        "Entry Score": "{:.1f}", "기준 종가": "{:,.2f}",
+                        "5D": "{:+.2f}%", "10D": "{:+.2f}%", "20D": "{:+.2f}%",
+                        "60D": "{:+.2f}%", "MDD20": "{:+.2f}%",
+                    }, na_rep="—"),
+                    hide_index=True, use_container_width=True,
+                )
+                st.caption("검증 기준일은 Entry Score가 기준 이상인 거래일 중 20D 성과 구간이 과도하게 겹치지 않도록 최소 20거래일 간격으로 선택한 날짜입니다. 같은 Setup 구간이 길게 지속되면 한 구간 안에서도 여러 기준일이 포함될 수 있습니다.")
+
     with st.expander("과거 검증 원자료 보기"):
         st.dataframe(detail.tail(250), hide_index=True, use_container_width=True)
-        st.caption("원자료의 pullback/momentum은 과거 각 거래일에서 재계산한 Entry 점수이며, fwd_5d~60d는 이후 실제 가격 수익률입니다. Calibration은 과거 시장 국면을 중립으로 고정한 가격 기반 검증입니다.")
+        st.caption("원자료의 pullback/momentum은 과거 각 거래일에서 재계산한 Entry 점수이며, *_sample_5d/10d/20d/60d가 각 기간의 실제 성과 검증 기준일을 표시합니다. Calibration은 과거 시장 국면을 중립으로 고정한 가격 기반 검증입니다.")
 
     st.caption("과거 결과는 미래 성과를 보장하지 않습니다. Calibration은 현재 Entry Engine을 보조하는 Historical Validation Layer로 사용하고, 현재 시장환경·Risk·옵션·기업 품질과 함께 해석하세요.")
 
 
 # -------------------- App shell --------------------
 st.title("Stock Analyzer by Kijungnam")
-st.caption("V6.0.12 · MULTI-LENS SETUP & DECISION SYSTEM · Scanner → Decision Dashboard → Deep Analysis")
+st.caption("V6.0.13 · MULTI-LENS SETUP & DECISION SYSTEM · Scanner → Decision Dashboard → Deep Analysis")
 
 with st.expander("🔥 V6 종목 스캐너 · 시장 전체 후보 찾기", expanded=False):
     render_scanner_section()
@@ -2166,7 +2239,7 @@ analysis=None
 analysis_modes=("🧭 V6 통합 판단","📊 핵심 분석","🎯 퀀트 분석","🧩 옵션 분석","🧪 과거 진입 검증")
 if symbol and mode in analysis_modes:
     try:
-        with st.spinner(f"{symbol} · V6.0.12 엔진을 계산하는 중입니다..."):
+        with st.spinner(f"{symbol} · V6.0.13 엔진을 계산하는 중입니다..."):
             analysis=build_full_analysis(symbol)
     except Exception as exc:
         st.error(f"분석을 계산하지 못했습니다: {exc}")
