@@ -1,4 +1,4 @@
-# Python
+# Python cache
 __pycache__/
 *.py[cod]
 *.pyo
@@ -12,13 +12,13 @@ env/
 # Streamlit secrets
 .streamlit/secrets.toml
 
-# Local data / database
+# Local databases / history
 .data/
 *.db
 *.sqlite
 *.sqlite3
 
-# OS files
+# OS
 .DS_Store
 Thumbs.db
 
