@@ -29,7 +29,7 @@ from setup_engine import build_setups
 from sr_engine import build_zones
 from technical_engine import build_technical_snapshot
 
-st.set_page_config(page_title="Stock Analyzer V6.0.12", page_icon="📈", layout="wide")
+st.set_page_config(page_title="Stock Analyzer V6.0.9", page_icon="📈", layout="wide")
 
 DB_FILE = Path(os.getenv("ANALYZER_DB_FILE", ".data/stock_analyzer_v6.sqlite"))
 HISTORY = SQLiteHistoryStore(DB_FILE)
@@ -160,14 +160,13 @@ h1,h2,h3{letter-spacing:-.025em}
 .delta-card{box-sizing:border-box;border:1px solid #29415e;border-radius:12px;padding:12px 14px;background:#0d1b2d;min-height:92px;margin:4px 0 14px}.delta-label{color:#94a3b8;font-size:.78rem;font-weight:800;line-height:1.4}.delta-value{font-size:1.22rem;font-weight:900;margin-top:6px}.delta-change{font-size:.83rem;font-weight:800;margin-left:7px}
 .risk-summary{border:1px solid #29415e;border-radius:12px;padding:13px 16px;background:#0a1728;margin:4px 0 10px;color:#cbd5e1;line-height:1.65}.consensus-summary{border:1px solid #315272;border-radius:16px;padding:18px 20px;background:linear-gradient(135deg,#0d1b2d,#10243a);margin:10px 0 16px;line-height:1.75;color:#dbeafe}.consensus-meter{border:1px solid #29415e;border-radius:13px;padding:14px 16px;background:#0a1728;min-height:104px}.consensus-meter .label{color:#94a3b8;font-size:.8rem;font-weight:800}.consensus-meter .value{font-size:1.7rem;font-weight:900;margin-top:7px;color:#f8fafc}
 .entry-decision-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:18px 0 12px}.entry-decision-card{box-sizing:border-box;border:1px solid #29415e;border-radius:14px;padding:16px 17px;background:#0a1728;min-height:122px}.entry-decision-label{color:#94a3b8;font-size:.76rem;font-weight:850;line-height:1.45}.entry-decision-value{font-size:1.34rem;font-weight:900;margin-top:9px;line-height:1.35}.entry-decision-interpretation{border:1px solid #315272;border-radius:14px;padding:17px 19px;background:linear-gradient(135deg,#0d1b2d,#10243a);color:#dbeafe;line-height:1.75;margin-bottom:18px}.entry-decision-interpretation b{color:#f8fafc}
-.dashboard-hero{border:1px solid #315272;border-radius:18px;padding:22px;background:linear-gradient(135deg,#0d1b2d,#10243a);margin:14px 0 20px}.dashboard-hero h2{margin:.25rem 0 .75rem}.dashboard-hero p{color:#dbeafe;line-height:1.75;margin:.38rem 0}.dashboard-mini{box-sizing:border-box;border:1px solid #29415e;border-radius:14px;padding:16px 17px;background:#0a1728;min-height:142px;height:100%;margin-bottom:16px}.dashboard-mini .label{font-size:.75rem;font-weight:850;color:#94a3b8;line-height:1.4}.dashboard-mini .value{font-size:1.38rem;font-weight:900;color:#f8fafc;margin:8px 0 5px;line-height:1.3}.quant-profile{border:1px solid #315272;border-radius:16px;padding:18px 20px;background:#0a1728;margin:10px 0 18px}.quant-profile h3{margin:.15rem 0 .6rem}.quant-link{border:1px solid #315272;border-radius:16px;padding:18px 20px;background:linear-gradient(135deg,#0d1b2d,#10243a);margin:10px 0 18px;line-height:1.75;color:#dbeafe}.quant-chart-box{box-sizing:border-box;border:1px solid #29415e;border-radius:14px;padding:16px 17px;background:#0a1728;min-height:186px;height:100%;margin-bottom:14px}.quant-chart-box .title{font-weight:900;color:#f8fafc;margin-bottom:8px}.cal-period-title{font-weight:900;color:#f8fafc;margin:16px 0 8px}.cal-period-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.cal-period{border:1px solid #20344d;border-radius:10px;background:#071522;padding:10px 11px;min-height:72px}.cal-period .k{font-size:.72rem;color:#94a3b8;font-weight:850}.cal-period .v{font-size:1.08rem;color:#f8fafc;font-weight:900;margin-top:5px}.cal-period-note{color:#8292a8;font-size:.78rem;line-height:1.55;margin:9px 0 13px}
 [data-testid="stMetricValue"]{font-size:clamp(1.4rem,2.5vw,2.1rem)}
 [data-testid="stDataFrame"]{border:1px solid #29415e;border-radius:10px;overflow:hidden}
 div[data-testid="stHorizontalBlock"]{gap:1.15rem;align-items:stretch}
 div[data-testid="stHorizontalBlock"]>div[data-testid="stColumn"]{min-height:100%}
 [data-testid="stDataFrame"]{margin-bottom:16px}
 hr{margin:2rem 0 2.2rem!important}
-@media(max-width:700px){.block-container{padding-left:.8rem;padding-right:.8rem}.v6-card,.brief-card,.scenario{height:auto;min-height:0}.indicator-row{align-items:flex-start}.entry-decision-grid{grid-template-columns:1fr 1fr}.cal-period-grid{grid-template-columns:1fr 1fr}.dashboard-mini,.quant-chart-box{height:auto;min-height:0}}
+@media(max-width:700px){.block-container{padding-left:.8rem;padding-right:.8rem}.v6-card,.brief-card,.scenario{height:auto;min-height:0}.indicator-row{align-items:flex-start}.entry-decision-grid{grid-template-columns:1fr 1fr}}
 </style>
 """, unsafe_allow_html=True)
 
@@ -868,7 +867,7 @@ def build_briefings(a: dict) -> dict[str, str]:
 
     entry_view = entry_decision_view(setups)
     overall_text = (
-        f"종목 매력도(Opportunity)는 {opp.score:.0f}점 · {grade_ko(opp.score)}입니다. 이 점수는 기업 품질, 추세 강도, 상대강도, 모멘텀·수급, 시장환경을 합쳐 '관찰할 가치가 높은 종목인가'를 평가하며, 현재 가격이 바로 좋은 매수 가격이라는 뜻은 아닙니다. "
+        f"종목 매력도(Opportunity)는 {opp.score:.0f}점 · {grade_ko(opp.score)}입니다. 이 점수는 기업 품질, 추세·리더십, 상대강도, 모멘텀·수급, 시장환경을 합쳐 '관찰할 가치가 높은 종목인가'를 평가하며, 현재 가격이 바로 좋은 매수 가격이라는 뜻은 아닙니다. "
         f"현재 우선 방식은 {entry_view['approach']}, 진입 상태는 {entry_view['state']}, 위험 수준은 {risk_ko(risk.level)}, 시장 국면은 {market_label_ko(market.label)}입니다. "
         f"{opp.interpretation} 따라서 종목 매력도와 실제 진입 타이밍을 분리해서 보고, Entry Engine과 Risk Engine의 확인 조건을 함께 읽는 것이 V6의 핵심입니다."
     )
@@ -1073,264 +1072,11 @@ def render_sr_and_chart(a: dict):
     st.plotly_chart(fig,use_container_width=True)
 
 
-
-def quant_profile(a: dict) -> dict:
-    """Translate V6 quantitative factors into a readable price-behaviour profile."""
-    tech = a["tech"]
-    t, m, d, rs = float(tech.trend), float(tech.momentum), float(tech.demand), float(tech.relative_strength)
-    extended = tech.dist_ema20_atr >= 1.8 or tech.rsi >= 72
-
-    if t < 45 and rs < 50 and m < 45:
-        name, cls = "약세형", "status-red"
-        summary = "추세·상대강도·단기 모멘텀이 함께 약합니다. 반등 신호보다 가격 구조 회복을 먼저 확인해야 하는 정량 상태입니다."
-    elif t >= 75 and m >= 75 and d >= 65 and rs >= 75:
-        if extended:
-            name, cls = "과열 추세형", "status-orange"
-            summary = "추세·모멘텀·수급·상대강도가 모두 강하지만 가격 확장도 커졌습니다. 강한 종목인 것과 신규 추격 가격이 유리한 것은 분리해서 봐야 합니다."
-        else:
-            name, cls = "모멘텀 가속형", "status-green"
-            summary = "강한 추세에 모멘텀과 거래량 확인이 동시에 붙고 있습니다. 돌파·추세 추종이 정량적으로 가장 잘 설명되는 상태입니다."
-    elif t >= 72 and rs >= 68 and m < 65 and abs(tech.dist_ema20_atr) <= 1.35:
-        name, cls = "건강한 눌림형", "status-teal"
-        summary = "중장기 추세와 상대강도는 유지되지만 단기 모멘텀이 쉬고 가격이 EMA20 부근으로 접근했습니다. 강한 종목의 조정 구간에 가까운 상태입니다."
-    elif t < 68 and m >= 65 and d >= 55 and rs >= 65:
-        name, cls = "초기 회복형", "status-blue"
-        summary = "장기 추세 점수는 아직 완전히 강하지 않지만 모멘텀·수급·상대강도가 먼저 개선되고 있습니다. 초기 추세 전환 여부를 관찰할 구간입니다."
-    elif t >= 65 and (m < 45 or d < 38):
-        name, cls = "추세 약화형", "status-yellow"
-        summary = "중장기 가격 구조는 남아 있지만 단기 모멘텀 또는 수급이 약해지고 있습니다. 종목 강도와 신규 진입 타이밍을 분리해서 볼 필요가 있습니다."
-    elif t >= 72 and rs >= 70:
-        name, cls = "강한 추세형", "status-green"
-        summary = "중장기 추세와 시장 대비 상대강도가 우호적입니다. 단기 모멘텀·수급의 강도에 따라 Pullback과 Momentum 중 적합한 접근이 달라집니다."
-    else:
-        name, cls = "혼합·전환형", "status-yellow"
-        summary = "정량 지표의 방향이 완전히 한쪽으로 정렬되지는 않았습니다. 추세·모멘텀·수급의 다음 변화가 중요합니다."
-    return {"name": name, "class": cls, "summary": summary}
-
-
-def quant_entry_implication(a: dict) -> tuple[str, str, str]:
-    tech, setups = a["tech"], a["setups"]
-    pull, mom = setups.pullback.score, setups.momentum.score
-    if pull >= 70 and mom >= 70:
-        return "두 전략 모두 가능", "status-blue", "눌림목과 모멘텀 조건이 동시에 유효합니다. 현재 가격 위치와 Risk에 따라 지지 확인 또는 돌파 확인 중 더 유리한 쪽을 선택할 수 있습니다."
-    if pull >= mom + 8 and pull >= 58:
-        return "눌림목 관점 우세", "status-teal", f"추세 {tech.trend:.0f}점에 비해 단기 모멘텀 {tech.momentum:.0f}점·수급 {tech.demand:.0f}점이 덜 강합니다. 현재 정량 구조는 강한 추격보다 지지·EMA 반응을 이용한 Pullback 접근과 더 잘 맞습니다."
-    if mom >= pull + 8 and mom >= 58:
-        return "모멘텀 관점 우세", "status-green", f"추세 {tech.trend:.0f}점·모멘텀 {tech.momentum:.0f}점·상대강도 {tech.relative_strength:.0f}점이 강한 흐름을 지지합니다. 거래량 확인과 Extension Risk를 함께 보면서 Momentum 접근을 검토할 수 있습니다."
-    return "진입 확인 필요", "status-yellow", "Pullback과 Momentum 어느 쪽도 정량적으로 뚜렷한 우위를 만들지 못했습니다. 지지 반응이나 돌파·거래량 확인을 기다리는 편이 자연스럽습니다."
-
-
-def quant_consistency(a: dict) -> tuple[str, str, str]:
-    opp, setups = a["opportunity"], a["setups"]
-    profile = quant_profile(a)
-    pname = profile["name"]
-    if pname == "초기 회복형" and opp.score < 68:
-        return "선행 개선", "status-blue", "종합점수는 아직 강하지 않지만 Quant가 먼저 개선되고 있습니다. 추세 전환이 실제 Opportunity 개선으로 이어지는지 관찰할 가치가 있습니다."
-    if opp.score >= 70 and pname in ("약세형", "추세 약화형"):
-        return "부분 충돌", "status-yellow", "기업·중장기 요소가 종목 매력도를 지지하지만 최근 정량 모멘텀/수급은 약합니다. 좋은 종목과 좋은 진입 타이밍을 분리해서 봐야 합니다."
-    if setups.preferred == "Pullback Preferred" and pname in ("건강한 눌림형", "강한 추세형", "추세 약화형"):
-        return "종합 판단을 지지", "status-green", "Quant의 추세·가격 위치·단기 에너지가 종합분석의 Pullback 접근 판단과 대체로 같은 방향입니다."
-    if setups.preferred == "Momentum Preferred" and pname in ("모멘텀 가속형", "과열 추세형", "강한 추세형"):
-        return "종합 판단을 지지", "status-green", "Quant의 추세·모멘텀·상대강도가 종합분석의 Momentum 접근 판단과 대체로 같은 방향입니다."
-    if setups.preferred == "No Clear Setup" and opp.score >= 70:
-        return "종목 강도 지지 · 타이밍 미완성", "status-yellow", "Quant는 종목의 구조적 강도를 어느 정도 지지하지만 신규 Entry 조건은 아직 충분히 성숙하지 않았습니다."
-    return "대체로 정합", "status-teal", "종합분석과 Quant 사이에 큰 방향 충돌은 없습니다. 세부 Entry와 Risk 조건을 함께 확인하세요."
-
-
-def quant_chart_interpretation(a: dict) -> dict:
-    tech, q = a["tech"], a["quant"]
-    now = float(a["now"])
-    chart = q["chart"]
-    ema20 = float(chart["ema20"].iloc[-1]); ema50 = float(chart["ema50"].iloc[-1]); ema200 = float(chart["ema200"].iloc[-1])
-    bb_u = float(chart["bb_upper"].iloc[-1]); bb_l = float(chart["bb_lower"].iloc[-1])
-
-    if now > ema20 > ema50 > ema200:
-        trend_title, trend_cls = "상승 정배열", "status-green"
-        trend_text = "현재가가 EMA20·EMA50·EMA200 위에 있고 이동평균도 정배열입니다. 중장기 상승 구조가 정량적으로 가장 깔끔한 편입니다."
-    elif now > ema50 > ema200:
-        trend_title, trend_cls = "중장기 상승 유지", "status-teal"
-        trend_text = "현재가는 EMA50·EMA200 위에 있어 중장기 상승 구조는 유지되지만, EMA20 위치에 따라 단기 조정 여부를 함께 봐야 합니다."
-    elif now > ema200:
-        trend_title, trend_cls = "중기 구조 약화", "status-yellow"
-        trend_text = "장기선 위에는 있지만 단기·중기 이동평균 구조가 완전히 정렬되지 않았습니다. 추세 회복 확인이 필요합니다."
-    else:
-        trend_title, trend_cls = "장기 구조 경고", "status-red"
-        trend_text = "현재가가 EMA200 아래에 있어 장기 가격 구조까지 약해진 상태입니다. 단기 반등보다 구조 회복을 먼저 확인하는 편이 좋습니다."
-
-    ema20_gap = (now / ema20 - 1) * 100 if ema20 else 0
-    if now > bb_u:
-        price_title, price_cls = "상단 확장", "status-orange"
-        price_text = f"가격이 Bollinger 상단을 넘어 확장됐습니다. EMA20 대비 {ema20_gap:+.1f}%로 추세 강도는 좋을 수 있지만 신규 추격 가격은 불리해질 수 있습니다."
-    elif now < bb_l:
-        price_title, price_cls = "하단 이탈", "status-red"
-        price_text = f"가격이 Bollinger 하단 아래에 있습니다. EMA20 대비 {ema20_gap:+.1f}%이며 단순 눌림인지 추세 훼손인지 지지 반응을 확인해야 합니다."
-    elif abs(tech.dist_ema20_atr) <= .65:
-        price_title, price_cls = "EMA20 근접", "status-teal"
-        price_text = f"가격이 EMA20과 가까운 위치입니다({tech.dist_ema20_atr:+.2f} ATR). 상승 구조가 유지된다면 Pullback 관점에서 중요한 가격대가 될 수 있습니다."
-    else:
-        price_title, price_cls = "밴드 내부", "status-blue"
-        price_text = f"가격은 Bollinger Band 내부에 있으며 EMA20 대비 {tech.dist_ema20_atr:+.2f} ATR 위치입니다. 현재는 극단적인 과열·과매도보다는 추세 안의 위치를 보는 편이 좋습니다."
-
-    if tech.rsi >= 70:
-        mom_title, mom_cls = "강한 모멘텀 / 과열 확인", "status-orange"
-        mom_text = f"RSI {tech.rsi:.1f}로 강한 상승 에너지가 확인되지만 과열 가능성도 함께 봐야 합니다. 강한 추세에서는 높은 RSI 자체가 자동 매도 신호는 아닙니다."
-    elif tech.rsi >= 55:
-        mom_title, mom_cls = "상승 모멘텀 우위", "status-green"
-        mom_text = f"RSI {tech.rsi:.1f}로 상승 쪽 에너지가 우세합니다. 모멘텀 점수 {tech.momentum:.1f}점과 함께 가속 여부를 확인합니다."
-    elif tech.rsi >= 45:
-        mom_title, mom_cls = "모멘텀 중립", "status-yellow"
-        mom_text = f"RSI {tech.rsi:.1f}로 과열·과매도 어느 쪽도 아닙니다. 현재는 방향보다 다음 가격·거래량 변화가 더 중요합니다."
-    else:
-        mom_title, mom_cls = "모멘텀 약화", "status-red"
-        mom_text = f"RSI {tech.rsi:.1f}로 단기 상승 에너지가 약합니다. 반등 전환이나 지지 확인 없이 추격하기에는 불리합니다."
-
-    if tech.volume_ratio >= 1.2 and tech.obv_slope > 0:
-        demand_title, demand_cls = "거래량·OBV 확인", "status-green"
-        demand_text = f"현재 거래량은 20일 평균의 {tech.volume_ratio:.2f}배이고 OBV 기울기도 +{tech.obv_slope:.3f}입니다. 가격 움직임을 수급이 함께 확인하는 편입니다."
-    elif tech.volume_ratio < .8 and tech.obv_slope <= 0:
-        demand_title, demand_cls = "수급 확인 부족", "status-yellow"
-        demand_text = f"거래량은 20일 평균의 {tech.volume_ratio:.2f}배로 낮고 OBV 기울기는 {tech.obv_slope:+.3f}입니다. 강한 상승 가속을 확인하기에는 수급 증거가 제한적입니다."
-    else:
-        demand_title, demand_cls = "수급 중립", "status-blue"
-        demand_text = f"거래량은 20일 평균의 {tech.volume_ratio:.2f}배, OBV 기울기는 {tech.obv_slope:+.3f}입니다. 수급이 가격을 강하게 확인하거나 부정하는 상태는 아닙니다."
-
-    return {
-        "trend": (trend_title, trend_cls, trend_text),
-        "price": (price_title, price_cls, price_text),
-        "momentum": (mom_title, mom_cls, mom_text),
-        "demand": (demand_title, demand_cls, demand_text),
-    }
-
-
-def _recent_delta(frame: pd.DataFrame, col: str, window: int = 5) -> float | None:
-    if frame.empty or col not in frame:
-        return None
-    values = pd.to_numeric(frame[col], errors="coerce").dropna().tail(window)
-    if len(values) < 2:
-        return None
-    return float(values.iloc[-1] - values.iloc[0])
-
-
-def cached_calibration_view(symbol: str, a: dict) -> dict:
-    """Use the most recently executed calibration without forcing a heavy backtest on the dashboard."""
-    thresholds = []
-    last = st.session_state.get(f"calibration_last_threshold_{symbol}")
-    if last is not None:
-        thresholds.append(int(last))
-    thresholds += [75]
-    thresholds = list(dict.fromkeys(thresholds))
-    result = None; used_threshold = None
-    for threshold in thresholds:
-        for prefix in ("calibration_result_v612", "calibration_result_v611", "calibration_result_v609"):
-            key = f"{prefix}_{symbol}_{threshold}"
-            if key in st.session_state:
-                result = st.session_state[key]; used_threshold = threshold; break
-        if result is not None:
-            break
-    if result is None:
-        return {"available": False, "title": "과거 검증 미실행", "class": "status-muted", "text": "과거 진입 검증 탭에서 Calibration을 실행하면 현재 신호와 과거 패턴의 정합성을 이곳에 연결해서 보여줍니다."}
-    _, summary = result
-    if summary is None or summary.empty:
-        return {"available": False, "title": "검증 자료 부족", "class": "status-muted", "text": f"기준 {used_threshold}점에서 충분한 과거 사례가 확보되지 않았습니다."}
-    setups=a["setups"]
-    p_row, m_row = _cal_row(summary, "Pullback"), _cal_row(summary, "Momentum")
-    if setups.preferred == "Momentum Preferred":
-        name, cls, txt = _historical_alignment("Momentum", setups.momentum.score, used_threshold, m_row)
-    else:
-        name, cls, txt = _historical_alignment("Pullback", setups.pullback.score, used_threshold, p_row)
-    return {"available": True, "title": f"{name} · 기준 {used_threshold}", "class": cls, "text": txt}
-
-
-def render_decision_dashboard(a: dict, symbol: str):
-    inf, tech, company, q = a["info"], a["tech"], a["company"], a["quant"]
-    opp, setups, risk, market, cons = a["opportunity"], a["setups"], a["risk"], a["market"], a["consensus"]
-    name = inf.get("longName") or inf.get("shortName") or symbol
-    entry_view = entry_decision_view(setups)
-    profile = quant_profile(a)
-    consistency = quant_consistency(a)
-    entry_imp = quant_entry_implication(a)
-    option_label = a.get("option_label", "N/A")
-    traj = reconstructed_trajectory(a, 10)
-    opp_delta = _recent_delta(traj, "Opportunity", 5)
-    pull_delta = _recent_delta(traj, "Pullback", 5)
-    mom_delta = _recent_delta(traj, "Momentum Entry", 5)
-    cal = cached_calibration_view(symbol, a)
-
-    st.header(f"V6 통합 판단 (Decision Dashboard) · {name} ({symbol})")
-    st.caption("Scanner에서 후보를 찾은 뒤, 핵심 분석과 Quant의 결과를 한 화면에서 연결해 보는 최상위 판단 화면입니다. 새로운 점수를 만들지 않고 기존 엔진 결과를 재구성합니다.")
-    st.markdown(
-        f"<div class='dashboard-hero'><div class='v6-kicker'>V6 INTEGRATED DECISION</div>"
-        f"<h2>종목 매력도 {opp.score:.1f} · {grade_ko(opp.score)}</h2>"
-        f"<p><b>우선 진입 방식</b> · <span class='{entry_view['class']}'>{entry_view['approach']}</span> &nbsp; | &nbsp; "
-        f"<b>현재 진입 상태</b> · <span class='{entry_view['class']}'>{entry_view['state']}</span><br>"
-        f"<b>Quant Profile</b> · <span class='{profile['class']}'>{profile['name']}</span> &nbsp; | &nbsp; "
-        f"<b>종합 × Quant</b> · <span class='{consistency[1]}'>{consistency[0]}</span><br>"
-        f"<b>Risk</b> · {risk_ko(risk.level)} &nbsp; | &nbsp; <b>시장 국면</b> · {market_label_ko(market.label)} &nbsp; | &nbsp; <b>Options</b> · {option_label}</p></div>",
-        unsafe_allow_html=True,
-    )
-
-    cols=st.columns(5)
-    for col,(label,value,sub) in zip(cols,[
-        ("종목 매력도 (Opportunity)",opp.score,"전체 관심 가치"),
-        ("기업 품질 (Company Quality)",company.score,f"커버리지 {company.coverage*100:.0f}%"),
-        ("퀀트 종합 (Quant Composite)",q["score"],"정량 근거"),
-        ("추세 강도 (Trend Strength)",tech.trend,f"12M {tech.ret_12m:+.1f}%"),
-        ("상대강도 (Relative Strength)",tech.relative_strength,"시장 대비"),
-    ]):
-        with col: score_card(label,value,sub,summary=True)
-
-    st.markdown(f"<div class='quant-profile'><div class='v6-kicker'>QUANT PROFILE</div><h3 class='{profile['class']}'>{profile['name']}</h3><div class='v6-sub'>{profile['summary']}</div><br><b class='{entry_imp[1]}'>{entry_imp[0]}</b><div class='v6-sub'>{entry_imp[2]}</div></div>", unsafe_allow_html=True)
-
-    st.subheader("Entry · 현재 방식과 준비도")
-    ec1,ec2,ec3,ec4=st.columns(4)
-    vals=[
-        (ec1,"눌림목 진입 (Pullback)",f"{setups.pullback.score:.1f}",setup_status_ko(setups.pullback),score_color(setups.pullback.score)),
-        (ec2,"모멘텀 진입 (Momentum)",f"{setups.momentum.score:.1f}",setup_status_ko(setups.momentum),score_color(setups.momentum.score)),
-        (ec3,"우선 진입 방식",entry_view['approach'],"상대적으로 적합한 방식","#7dd3fc"),
-        (ec4,"현재 진입 상태",entry_view['state'],"실제 준비도", "#34d399" if entry_view['class']=='status-green' else "#2dd4bf" if entry_view['class']=='status-teal' else "#fbbf24"),
-    ]
-    for col,label,value,sub,color in vals:
-        with col:
-            st.markdown(f"<div class='dashboard-mini'><div class='label'>{label}</div><div class='value' style='color:{color}'>{value}</div><div class='v6-sub'>{sub}</div></div>",unsafe_allow_html=True)
-
-    st.subheader("현재 · 변화 · 과거 검증")
-    t1,t2,t3=st.columns(3)
-    with t1:
-        st.markdown(f"<div class='dashboard-mini'><div class='label'>현재 상태</div><div class='value'>{opp.score:.1f} · {grade_ko(opp.score)}</div><div class='v6-sub'>{entry_view['state']} · {risk_ko(risk.level)} Risk</div></div>",unsafe_allow_html=True)
-    with t2:
-        od='—' if opp_delta is None else f"{opp_delta:+.1f}"
-        pd='—' if pull_delta is None else f"{pull_delta:+.1f}"
-        md='—' if mom_delta is None else f"{mom_delta:+.1f}"
-        st.markdown(f"<div class='dashboard-mini'><div class='label'>최근 변화 · 5D</div><div class='value'>Opportunity {od}</div><div class='v6-sub'>Pullback {pd} · Momentum {md}</div></div>",unsafe_allow_html=True)
-    with t3:
-        st.markdown(f"<div class='dashboard-mini'><div class='label'>과거 진입 검증</div><div class='value {cal['class']}'>{cal['title']}</div><div class='v6-sub'>{cal['text']}</div></div>",unsafe_allow_html=True)
-
-    st.subheader("Analysis Consensus · 교차 확인")
-    cc1,cc2,cc3=st.columns(3)
-    for col,label,val,sub in [
-        (cc1,"Signal Agreement",f"{cons.signal_agreement}%",cons.headline),
-        (cc2,"Data Confidence",f"{cons.data_confidence}%","원자료 커버리지"),
-        (cc3,"종합 × Quant",consistency[0],consistency[2]),
-    ]:
-        with col:
-            st.markdown(f"<div class='dashboard-mini'><div class='label'>{label}</div><div class='value'>{val}</div><div class='v6-sub'>{sub}</div></div>",unsafe_allow_html=True)
-
-    st.markdown(
-        f"<div class='consensus-summary'><div class='v6-kicker'>INTEGRATED INTERPRETATION</div>"
-        f"<b>{profile['name']} · {entry_view['approach']}</b><br><br>"
-        f"{opp.interpretation} {profile['summary']} {consistency[2]} {entry_view['interpretation']} "
-        f"현재 시장은 {market_label_ko(market.label)}이고 옵션 확인값은 {option_label}입니다. "
-        f"따라서 최종 행동은 Entry 준비도와 Risk를 우선하고, Quant는 그 판단의 정량적 근거로 활용하는 것이 좋습니다.</div>",
-        unsafe_allow_html=True,
-    )
-    trajectory_chart(traj,["Opportunity","Pullback","Momentum Entry"],f"dashboard_traj_{symbol}","최근 10영업일 · 통합 판단 변화")
-
-
 def render_analysis(a: dict, symbol: str):
     inf,tech,market,company,risk,setups,opp = a["info"],a["tech"],a["market"],a["company"],a["risk"],a["setups"],a["opportunity"]
     name=inf.get("longName") or inf.get("shortName") or symbol
     st.header(f"{name} · {symbol}")
-    st.caption(f"V6.0.12 핵심 분석 · 데이터 기준 {pd.Timestamp(a['frame'].index[-1]).date()} · {a['region']} Market · Sector {a['sector'] or 'N/A'}")
+    st.caption(f"V6.0.9 종합분석 · 데이터 기준 {pd.Timestamp(a['frame'].index[-1]).date()} · {a['region']} Market · Sector {a['sector'] or 'N/A'}")
 
     st.subheader("종합 판단 요약")
     entry_view = entry_decision_view(setups)
@@ -1345,7 +1091,7 @@ def render_analysis(a: dict, symbol: str):
     items=[
         ("종목 매력도 (Opportunity)",opp.score,"좋은 종목인가를 평가 · Entry/Risk는 별도"),
         ("기업 품질 (Company Quality)",company.score,f"데이터 커버리지 {company.coverage*100:.0f}% · {company.confidence}"),
-        ("추세 강도 (Trend Strength)",tech.trend,f"12M {tech.ret_12m:+.1f}%"),
+        ("추세·리더십 (Trend / Leadership)",tech.trend,f"12M {tech.ret_12m:+.1f}%"),
         ("상대강도 (Relative Strength)",tech.relative_strength,"시장 벤치마크 대비 가격 리더십"),
         ("모멘텀·수급 (Momentum / Demand)",.60*tech.momentum+.40*tech.demand,f"RSI {tech.rsi:.1f} · 거래량 {tech.volume_ratio:.2f}x"),
     ]
@@ -1383,7 +1129,7 @@ def render_analysis(a: dict, symbol: str):
     render_sr_and_chart(a)
 
     data_date=pd.Timestamp(a["frame"].index[-1]).date()
-    HISTORY.record(symbol,{"opportunity":opp.score,"company":company.score,"trend":tech.trend,"momentum":tech.momentum,"relative_strength":tech.relative_strength,"pullback":setups.pullback.score,"momentum_entry":setups.momentum.score,"market":market.score,"risk":risk.score,"preferred_setup":setups.preferred},data_date,{"version":"6.0.12","source":"recorded"})
+    HISTORY.record(symbol,{"opportunity":opp.score,"company":company.score,"trend":tech.trend,"momentum":tech.momentum,"relative_strength":tech.relative_strength,"pullback":setups.pullback.score,"momentum_entry":setups.momentum.score,"market":market.score,"risk":risk.score,"preferred_setup":setups.preferred},data_date,{"version":"6.0.6","source":"recorded"})
 
     with st.expander("최근 뉴스"):
         rows=news(symbol)
@@ -1477,37 +1223,16 @@ def render_peer_comparison(a: dict, symbol: str):
 def render_quant_analysis(a: dict, symbol: str):
     inf,tech,company,q=a["info"],a["tech"],a["company"],a["quant"]
     name=inf.get("longName") or inf.get("shortName") or symbol
-    profile=quant_profile(a)
-    consistency=quant_consistency(a)
-    entry_imp=quant_entry_implication(a)
-    entry_view=entry_decision_view(a["setups"])
-
-    st.header(f"퀀트 분석 (Quant Analysis) · {name} ({symbol})")
-    st.caption("Quant는 가격·거래량·재무 데이터를 정량적으로 분해해 종합 판단의 근거를 검증하는 Evidence Layer입니다. 점수 하나보다 지표 조합과 변화 방향을 함께 봅니다.")
-
-    st.subheader("종합 판단 × Quant 연결")
-    st.markdown(
-        f"<div class='quant-link'><div class='v6-kicker'>OVERALL × QUANT CONNECTION</div>"
-        f"<b>종합 판단</b> · Opportunity {a['opportunity'].score:.1f} · {entry_view['approach']} · {entry_view['state']}<br>"
-        f"<b>Quant Profile</b> · <span class='{profile['class']}'>{profile['name']}</span><br>"
-        f"<b>정합성</b> · <span class='{consistency[1]}'>{consistency[0]}</span><br><br>{consistency[2]}</div>",
-        unsafe_allow_html=True,
-    )
-
+    st.header(f"퀀트분석 · {name} ({symbol})")
+    st.caption("V6 퀀트 종합점수는 기업 품질 + 추세 + 모멘텀 + 수급 + 상대강도를 묶은 설명용 정량 점수입니다. 시장 국면과 진입 점수는 중복을 피하기 위해 별도로 봅니다.")
     c1,c2,c3,c4,c5=st.columns(5)
     for col,(label,value,sub) in zip([c1,c2,c3,c4,c5],[
-        ("퀀트 종합 (Quant Composite)",q["score"],"시장환경·진입 점수 제외"),
-        ("추세 강도 (Trend Strength)",tech.trend,"중장기 가격 구조"),
-        ("모멘텀 (Momentum)",tech.momentum,f"RSI {tech.rsi:.1f}"),
-        ("수급 (Demand)",tech.demand,f"거래량 {tech.volume_ratio:.2f}x"),
-        ("상대강도 (Relative Strength)",tech.relative_strength,"시장 대비"),
+        ("퀀트 종합 (Quant Composite)",q["score"],"시장환경·진입 점수 제외"),("추세 (Trend)",tech.trend,"중장기 구조"),("모멘텀 (Momentum)",tech.momentum,f"RSI {tech.rsi:.1f}"),("수급 (Demand)",tech.demand,f"거래량 {tech.volume_ratio:.2f}x"),("상대강도 (Relative Strength)",tech.relative_strength,"시장 대비"),
     ]):
-        with col: score_card(label,value,sub,summary=True)
-
-    st.markdown(f"<div class='quant-profile'><div class='v6-kicker'>QUANT PROFILE</div><h3 class='{profile['class']}'>{profile['name']}</h3><div class='v6-sub'>{profile['summary']}</div><br><b class='{entry_imp[1]}'>Entry Implication · {entry_imp[0]}</b><div class='v6-sub'>{entry_imp[2]}</div></div>", unsafe_allow_html=True)
+        with col: score_card(label,value,sub)
 
     st.markdown("<div class='v6-section'></div>", unsafe_allow_html=True)
-    st.subheader("AI Quant Brief · 정량 해석")
+    st.subheader("AI 퀀트 브리핑")
     q_state = grade_ko(q["score"])
     trend_view = "중장기 추세가 강하게 유지되고 있습니다." if tech.trend >= 75 else "중장기 추세는 우호적이지만 추가 확인이 필요합니다." if tech.trend >= 60 else "중장기 추세가 아직 뚜렷하지 않습니다."
     momentum_view = "단기 모멘텀도 강합니다." if tech.momentum >= 75 else "단기 모멘텀은 중립권입니다." if tech.momentum >= 45 else "단기 모멘텀이 약합니다."
@@ -1515,7 +1240,7 @@ def render_quant_analysis(a: dict, symbol: str):
     rs_view = "시장 대비 상대강도가 매우 우수합니다." if tech.relative_strength >= 80 else "시장 대비 상대강도는 우호적입니다." if tech.relative_strength >= 65 else "시장 대비 상대강도 우위는 뚜렷하지 않습니다."
     briefing(
         "퀀트 종합 브리핑",
-        f"퀀트 종합점수는 {q['score']:.1f}점({q_state})이고 현재 Quant Profile은 '{profile['name']}'입니다. 추세 {tech.trend:.1f}, 모멘텀 {tech.momentum:.1f}, 수급 {tech.demand:.1f}, 상대강도 {tech.relative_strength:.1f}입니다. {trend_view} {momentum_view} {demand_view} {rs_view} {consistency[2]} Entry 관점에서는 {entry_imp[2]}",
+        f"퀀트 종합점수는 {q['score']:.1f}점({q_state})입니다. 추세 {tech.trend:.1f}점, 모멘텀 {tech.momentum:.1f}점, 수급 {tech.demand:.1f}점, 상대강도 {tech.relative_strength:.1f}점입니다. {trend_view} {momentum_view} {demand_view} {rs_view}",
         "QUANT DECISION",
         wide=True,
     )
@@ -1535,16 +1260,7 @@ def render_quant_analysis(a: dict, symbol: str):
     st.markdown("<div class='v6-section'></div>",unsafe_allow_html=True)
     st.subheader("가격 · 추세 · 거래량")
     render_quant_chart(a)
-
-    interpretation=quant_chart_interpretation(a)
-    st.subheader("정량 차트 해석 (Quant Chart Interpretation)")
-    icols=st.columns(4)
-    for col,key,label in zip(icols,["trend","price","momentum","demand"],["추세 구조","가격 위치","모멘텀","수급"]):
-        title,cls,body=interpretation[key]
-        with col:
-            st.markdown(f"<div class='quant-chart-box'><div class='v6-kicker'>{label}</div><div class='title {cls}'>{title}</div><div class='v6-sub'>{body}</div></div>",unsafe_allow_html=True)
-    st.markdown(f"<div class='entry-decision-interpretation'><div class='v6-kicker'>ENTRY IMPLICATION</div><b class='{entry_imp[1]}'>{entry_imp[0]}</b><br>{entry_imp[2]}</div>",unsafe_allow_html=True)
-    st.caption("차트 해석은 EMA20/50/200, Bollinger Band, RSI, 20일 평균 대비 거래량, OBV 방향을 현재 Quant 점수와 연결해 설명합니다. 개별 지표 하나보다 서로 같은 방향을 가리키는지 보는 것이 중요합니다.")
+    st.info(f"핵심 관찰 · 현재 52주 범위의 {q['position52']:.1f}% 위치 · Trend {tech.trend:.1f} · RSI {tech.rsi:.1f} · 거래량 {tech.volume_ratio:.2f}x · Relative Strength {tech.relative_strength:.1f}")
 
     st.markdown("<div class='v6-section'></div>",unsafe_allow_html=True)
     render_can_slim(a)
@@ -1911,15 +1627,11 @@ def render_calibration(a: dict, symbol: str):
     st.markdown("<div class='cal-section-note'>이 기준은 현재 Entry 점수를 바꾸는 값이 아닙니다. 과거 사례 중 어느 정도 이상을 '강한 Setup 검증 사례'로 포함할지 정하는 기준선이며, 눌림목과 모멘텀에 동일하게 적용됩니다.</div>", unsafe_allow_html=True)
     threshold = st.slider(
         "검증 사례 포함 기준점수",
-        min_value=30, max_value=90, value=75, step=5,
-        help="과거 눌림목·모멘텀 Entry 점수가 이 값 이상이었던 날짜만 검증 후보로 모읍니다. 현재 점수 자체를 보정하거나 변경하지 않습니다. 낮은 기준은 매수 기준을 낮추기 위한 것이 아니라 점수대별 과거 성과를 비교·검증하기 위한 용도입니다.",
+        60, 90, 75,
+        help="과거 눌림목·모멘텀 Entry 점수가 이 값 이상이었던 날짜만 검증 후보로 모읍니다. 현재 점수 자체를 보정하거나 변경하지 않습니다.",
     )
-    if threshold < 50:
-        mode_txt = "비교·검증 구간 · 약한 Setup까지 포함해 낮은 점수대의 실제 성과를 확인합니다. 매수 기준을 낮춘다는 의미는 아닙니다."
-    elif threshold < 60:
-        mode_txt = "중립 비교 구간 · 중립적 Setup까지 넓게 포함해 점수체계의 변별력을 확인합니다."
-    elif threshold < 70:
-        mode_txt = "넓은 기준 · 사례 수는 늘지만 초기·보통 Setup도 함께 포함될 수 있습니다."
+    if threshold < 70:
+        mode_txt = "넓은 기준 · 사례 수는 늘지만 약한 Setup도 함께 포함될 수 있습니다."
     elif threshold < 80:
         mode_txt = "균형 기준 · 사례 수와 Setup 강도의 균형을 보는 구간입니다."
     else:
@@ -1939,24 +1651,21 @@ def render_calibration(a: dict, symbol: str):
         f"<span class='status-yellow'>{mode_txt}</span></div>",
         unsafe_allow_html=True,
     )
-    st.caption("기준 범위 · 30~90점 / 5점 단위 · 기본값 75점. 30~49점은 약한 Setup까지 포함하는 비교·검증용 구간이며, 낮은 점수를 신규 진입 기준으로 권장한다는 뜻이 아닙니다.")
     with st.expander("검증 기준과 현재 Entry 점수의 관계"):
         st.markdown(f"""
 - 현재 종합분석의 **눌림목 진입 {pull.score:.1f}점 / 모멘텀 진입 {mom.score:.1f}점**을 그대로 표시합니다.
 - **검증 기준 {threshold}점**은 과거 사례를 골라내기 위한 기준입니다. 현재 Entry 점수를 {threshold}점으로 보정하는 값이 아닙니다.
-- 슬라이더는 **30~90점 / 5점 단위**이며 기본값은 75점입니다. 낮은 기준점수는 매수 조건을 느슨하게 만들기 위한 것이 아니라, 30점대부터 80점대까지 점수가 높아질수록 과거 성과가 실제로 개선되는지 비교하기 위한 Calibration 용도입니다.
 - 과거 각 거래일에서 눌림목 또는 모멘텀 점수가 {threshold}점 이상이면 해당 전략의 검증 후보로 분류합니다.
 - Calibration에서는 과거 시점 재무 데이터 누출을 피하기 위해 **가격·거래량·기술 구조 중심**으로 재계산하며, 과거 Market Regime 데이터가 아직 완전하지 않아 시장 점수는 50점(중립)으로 고정합니다. 따라서 종합분석의 오늘 점수와 과거 재계산 점수는 완전히 같은 조건은 아닙니다.
         """)
 
     run = st.button("과거 진입 검증 실행", type="primary")
-    cache_key = f"calibration_result_v612_{symbol}_{threshold}"
+    cache_key = f"calibration_result_v609_{symbol}_{threshold}"
     if run:
         try:
             with st.spinner("과거 각 거래일의 눌림목·모멘텀 Setup을 재구성하는 중입니다..."):
                 detail, summary = run_setup_calibration(a["frame"], a["benchmark"], float(threshold))
             st.session_state[cache_key] = (detail, summary)
-            st.session_state[f"calibration_last_threshold_{symbol}"] = int(threshold)
         except Exception as exc:
             st.error(f"과거 진입 검증 실패: {exc}")
 
@@ -2008,23 +1717,14 @@ def render_calibration(a: dict, symbol: str):
             hit = _safe_num(row, "Hit 20D")
             med = _safe_num(row, "Median 20D")
             avg = _safe_num(row, "Avg 20D")
-            avg5 = _safe_num(row, "Avg 5D")
-            avg10 = _safe_num(row, "Avg 10D")
-            avg20 = _safe_num(row, "Avg 20D")
-            avg60 = _safe_num(row, "Avg 60D")
             mdd = _safe_num(row, "Avg MDD20")
             tone, explanation = _strategy_validation_text(row, setup_name)
             confidence, confidence_cls, _ = _validation_sample_confidence(n)
             # Positive count and hit rate are generated from the same 20D validation cohort.
             hit_text = f"{pos} / {n} ({hit:.0f}%)" if n and np.isfinite(hit) else "—"
             med_text = f"{med:+.1f}%" if np.isfinite(med) else "—"
+            avg_text = f"{avg:+.1f}%" if np.isfinite(avg) else "—"
             mdd_text = f"{mdd:.1f}%" if np.isfinite(mdd) else "—"
-            period_vals = {
-                "5D": "—" if not np.isfinite(avg5) else f"{avg5:+.1f}%",
-                "10D": "—" if not np.isfinite(avg10) else f"{avg10:+.1f}%",
-                "20D": "—" if not np.isfinite(avg20) else f"{avg20:+.1f}%",
-                "60D": "—" if not np.isfinite(avg60) else f"{avg60:+.1f}%",
-            }
             st.markdown(
                 f"<div class='cal-strategy'><div class='v6-kicker'>{title}</div>"
                 f"<div style='font-weight:900;color:#f8fafc'>{tone}</div>"
@@ -2032,18 +1732,10 @@ def render_calibration(a: dict, symbol: str):
                 f"<div class='cal-stat'><div class='k'>20D 검증 사례</div><div class='v'>{n}회</div></div>"
                 f"<div class='cal-stat'><div class='k'>20일 후 상승 사례</div><div class='v'>{hit_text}</div></div>"
                 f"<div class='cal-stat'><div class='k'>대표 수익률 · 20D Median</div><div class='v'>{med_text}</div></div>"
+                f"<div class='cal-stat'><div class='k'>평균 수익률 · 20D Average</div><div class='v'>{avg_text}</div></div>"
                 f"<div class='cal-stat'><div class='k'>평균 최대 하락폭 · MDD20</div><div class='v'>{mdd_text}</div></div>"
-                f"<div class='cal-stat'><div class='k'>Setup 구간</div><div class='v'>{episodes}회</div></div>"
-                f"<div class='cal-stat'><div class='k'>기준 이상 거래일</div><div class='v'>{int(row.get('Signals', 0))}일</div></div>"
-                f"<div class='cal-stat'><div class='k'>표본 신뢰도</div><div class='v {confidence_cls}'>{confidence}</div></div>"
-                f"</div>"
-                f"<div class='cal-period-title'>기간별 평균 수익률</div><div class='cal-period-grid'>"
-                f"<div class='cal-period'><div class='k'>5D · 약 1주</div><div class='v'>{period_vals['5D']}</div></div>"
-                f"<div class='cal-period'><div class='k'>10D · 약 2주</div><div class='v'>{period_vals['10D']}</div></div>"
-                f"<div class='cal-period'><div class='k'>20D · 약 1개월</div><div class='v'>{period_vals['20D']}</div></div>"
-                f"<div class='cal-period'><div class='k'>60D · 약 3개월</div><div class='v'>{period_vals['60D']}</div></div>"
-                f"</div><div class='cal-period-note'>5D·10D·20D는 진입 후 성과가 어떻게 전개되는지 보고, 60D는 진입 정확도보다는 이후 추세 지속성을 확인하는 장기 참고값으로 봅니다.</div>"
-                f"<div class='v6-sub'>{explanation}</div></div>",
+                f"<div class='cal-stat'><div class='k'>Setup 구간</div><div class='v'>{episodes}회</div></div>"f"<div class='cal-stat'><div class='k'>기준 이상 거래일</div><div class='v'>{int(row.get('Signals', 0))}일</div></div>"f"<div class='cal-stat'><div class='k'>표본 신뢰도</div><div class='v {confidence_cls}'>{confidence}</div></div>"
+                f"</div><div class='v6-sub'>{explanation}</div></div>",
                 unsafe_allow_html=True,
             )
 
@@ -2134,7 +1826,7 @@ def render_calibration(a: dict, symbol: str):
 
 # -------------------- App shell --------------------
 st.title("Stock Analyzer by Kijungnam")
-st.caption("V6.0.12 · MULTI-LENS SETUP & DECISION SYSTEM · Scanner → Decision Dashboard → Deep Analysis")
+st.caption("V6.0.9 · MULTI-LENS SETUP & DECISION SYSTEM · Decision Summary & Consensus")
 
 with st.expander("🔥 V6 종목 스캐너 · 시장 전체 후보 찾기", expanded=False):
     render_scanner_section()
@@ -2153,37 +1845,24 @@ symbol=st.session_state.get("symbol","")
 if symbol:
     st.caption(f"현재 선택 종목 · {info(symbol).get('longName') or info(symbol).get('shortName') or symbol} · {symbol}")
 
-st.markdown("<div class='v6-section'></div>", unsafe_allow_html=True)
-st.caption("통합 판단에서 전체 상태를 먼저 보고, 궁금한 근거만 아래 상세 분석으로 내려가는 구조입니다.")
-mode=st.radio(
-    "개별 분석 메뉴",
-    ["🧭 V6 통합 판단","📊 핵심 분석","🎯 퀀트 분석","🧩 옵션 분석","🌎 시장 환경","🧪 과거 진입 검증","💾 History"],
-    horizontal=True,label_visibility="collapsed"
-)
+mode=st.radio("개별 분석 메뉴",["📊 종합분석","🎯 퀀트분석","🧩 옵션분석","🌎 시장환경","🧪 과거 진입 검증","💾 History"],horizontal=True,label_visibility="collapsed")
 st.divider()
 
 analysis=None
-analysis_modes=("🧭 V6 통합 판단","📊 핵심 분석","🎯 퀀트 분석","🧩 옵션 분석","🧪 과거 진입 검증")
-if symbol and mode in analysis_modes:
+if symbol and mode in ("📊 종합분석","🎯 퀀트분석","🧩 옵션분석","🧪 과거 진입 검증"):
     try:
-        with st.spinner(f"{symbol} · V6.0.12 엔진을 계산하는 중입니다..."):
-            analysis=build_full_analysis(symbol)
-    except Exception as exc:
-        st.error(f"분석을 계산하지 못했습니다: {exc}")
+        with st.spinner(f"{symbol} · V6.0.9 엔진을 계산하는 중입니다..."): analysis=build_full_analysis(symbol)
+    except Exception as exc: st.error(f"분석을 계산하지 못했습니다: {exc}")
 
-if mode=="🧭 V6 통합 판단":
-    if not symbol: st.info("먼저 종목을 검색해 주세요.")
-    elif analysis: render_decision_dashboard(analysis,symbol)
-
-elif mode=="📊 핵심 분석":
+if mode=="📊 종합분석":
     if not symbol: st.info("먼저 종목을 검색해 주세요.")
     elif analysis: render_analysis(analysis,symbol)
 
-elif mode=="🎯 퀀트 분석":
+elif mode=="🎯 퀀트분석":
     if not symbol: st.info("먼저 종목을 검색해 주세요.")
     elif analysis: render_quant_analysis(analysis,symbol)
 
-elif mode=="🧩 옵션 분석":
+elif mode=="🧩 옵션분석":
     if not symbol: st.info("먼저 종목을 검색해 주세요.")
     else:
         try:
@@ -2194,7 +1873,7 @@ elif mode=="🧩 옵션 분석":
             render_options(symbol,base["now"],money,support,resistance)
         except Exception as exc: st.warning(f"옵션분석을 표시할 수 없습니다: {exc}")
 
-elif mode=="🌎 시장 환경": render_market_dashboard()
+elif mode=="🌎 시장환경": render_market_dashboard()
 
 elif mode=="🧪 과거 진입 검증":
     if not symbol or not analysis: st.info("먼저 종목을 검색한 뒤 과거 진입 검증을 실행해 주세요.")

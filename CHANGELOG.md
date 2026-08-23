@@ -1,3 +1,9 @@
+## V6.0.12
+- Expanded Entry Calibration threshold range to **30~90** with **5-point steps** while keeping 75 as the default.
+- Added plain-language guidance that low thresholds are for score-discrimination testing, not relaxed buy recommendations.
+- Added threshold-zone interpretation for comparison / neutral / broad / balanced / strict validation ranges.
+- Preserved the V6.0.11 Decision Dashboard, Quant interpretation, and historical validation case logic.
+
 ## V6.0.11
 - Added **V6 통합 판단 (Decision Dashboard)** between Scanner and detailed analysis.
 - Reorganized the workflow into Scanner → Integrated Decision → Core / Quant / Options / Market / Calibration / History.
